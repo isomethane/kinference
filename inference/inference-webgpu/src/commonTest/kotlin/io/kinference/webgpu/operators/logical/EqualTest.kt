@@ -5,15 +5,15 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class EqualTest {
-    private fun getTargetPath(dirName: String) = "/equal/$dirName/"
+    private fun getTargetPath(dirName: String) = "equal/$dirName/"
 
     @Test
-    fun test_equal() = TestRunner.runTest {
+    fun gpu_test_equal() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_equal"))
     }
 
     @Test
-    fun test_equal_with_broadcast() = TestRunner.runTest {
+    fun gpu_test_equal_with_broadcast() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_equal_bcast"))
     }
 }

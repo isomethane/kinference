@@ -8,12 +8,12 @@ class ConstantTest {
     private fun getTargetPath(dirName: String) = "/constant/$dirName/"
 
     @Test
-    fun test_constant() = TestRunner.runTest {
+    fun gpu_test_constant() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_constant"))
     }
 
     @Test
-    fun test_scalar_constant() = TestRunner.runTest {
+    fun gpu_test_scalar_constant() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_scalar_constant"))
     }
 }

@@ -16,24 +16,25 @@ kotlin {
     }
 
     sourceSets {
-        val jsMain by getting() {
+        val jsMain by getting {
             dependencies {
-                implementation(project(":serialization"))
+                api(project(":serialization:serializer-protobuf"))
+
+                api(project(":ndarray:ndarray-api"))
+                api(project(":ndarray:ndarray-tfjs"))
+
+                api(project(":inference:inference-api"))
                 api(project(":inference:inference-ir"))
-
-                implementation(npm("@tensorflow/tfjs-core", Versions.TFJS))
-                implementation(npm("@tensorflow/tfjs-backend-webgl", Versions.TFJS))
-
-                implementation(project(":inference:inference-api"))
 
                 api(project(":utils:logger"))
                 api(project(":utils:model-profiler"))
+                api(project(":utils:common-utils"))
 
                 api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}")
             }
         }
 
-        val jsTest by getting() {
+        val jsTest by getting {
             dependencies {
                 implementation(kotlin("test-js"))
                 implementation(kotlin("test-annotations-common"))

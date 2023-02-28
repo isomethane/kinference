@@ -3,27 +3,28 @@ package io.kinference.webgpu.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.extensions.squeeze
 import io.kinference.ndarray.toIntArray
 import io.kinference.operator.*
 import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.graph.WebGPUContext
-import io.kinference.webgpu.ndarray.*
+import io.kinference.webgpu.data.tensor.asTensor
+import io.kinference.webgpu.engine.WebGPUEnvironment
 
-sealed class Squeeze(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(info, attributes, inputs, outputs) {
+sealed class Squeeze(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1, untilVersion = 13)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in SqueezeVer1.VERSION.asRange() -> SqueezeVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in SqueezeVer1.VERSION.asRange() -> SqueezeVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Squeeze operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class SqueezeVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Squeeze(INFO, attributes, inputs, outputs) {
+class SqueezeVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Squeeze(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
 
@@ -42,9 +43,8 @@ class SqueezeVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>,
     private val axes: LongArray? by attributeOrNull()
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        val context = contexts.graph as WebGPUContext
         val squeezeAxes = axes?.toIntArray() ?: IntArray(0)
 
-        return listOf(inputs[0]!!.data.squeeze(squeezeAxes, context.gpuState).asTensor())
+        return listOf(inputs[0]!!.data.squeeze(squeezeAxes, WebGPUEnvironment.gpuState).asTensor())
     }
 }

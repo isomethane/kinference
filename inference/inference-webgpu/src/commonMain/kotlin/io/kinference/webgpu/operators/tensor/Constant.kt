@@ -3,25 +3,25 @@ package io.kinference.webgpu.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.toIntArray
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
-import io.kinference.webgpu.graph.WebGPUContext
-import io.kinference.webgpu.ndarray.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
+import io.kinference.webgpu.data.tensor.asTensor
 
-sealed class Constant(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(info, attributes, inputs, outputs) {
+sealed class Constant(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in ConstantVer1.VERSION.asRange() -> ConstantVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in ConstantVer1.VERSION.asRange() -> ConstantVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Constant operator: $version")
         }
     }
 }
 
-class ConstantVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Constant(INFO, attributes, inputs, outputs) {
+class ConstantVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Constant(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
 
@@ -44,23 +44,21 @@ class ConstantVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>
 
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        val context = contexts.graph as WebGPUContext
-
         //only one of all attributes is not null
         val (name, value) = ATTRIBUTES_INFO.map { it.name to getAttributeOrNull<Any?>(it.name) }.single { it.second != null }
 
         @Suppress("UNCHECKED_CAST")
         val result = when (name) {
             "value" -> value
-            "value_float" -> NDArray.floatNDArray(NDArrayInfo(intArrayOf(), WebGPUDataType.FLOAT32), floatArrayOf(value as Float)).asTensor()
+            "value_float" -> NDArrayWebGPU.floatNDArray(NDArrayInfo(intArrayOf(), WebGPUDataType.FLOAT32), floatArrayOf(value as Float)).asTensor()
             "value_floats" -> {
                 value as FloatArray
-                NDArray.floatNDArray(NDArrayInfo(intArrayOf(value.size), WebGPUDataType.FLOAT32), value).asTensor()
+                NDArrayWebGPU.floatNDArray(NDArrayInfo(intArrayOf(value.size), WebGPUDataType.FLOAT32), value).asTensor()
             }
-            "value_int" -> NDArray.intNDArray(NDArrayInfo(intArrayOf(), WebGPUDataType.INT32), intArrayOf((value as Long).toInt())).asTensor()
+            "value_int" -> NDArrayWebGPU.intNDArray(NDArrayInfo(intArrayOf(), WebGPUDataType.INT32), intArrayOf((value as Long).toInt())).asTensor()
             "value_ints" -> {
                 value as LongArray
-                NDArray.intNDArray(NDArrayInfo(intArrayOf(value.size), WebGPUDataType.FLOAT32), value.toIntArray()).asTensor()
+                NDArrayWebGPU.intNDArray(NDArrayInfo(intArrayOf(value.size), WebGPUDataType.FLOAT32), value.toIntArray()).asTensor()
             }
             else -> error("Unsupported data type")
         } as WebGPUTensor

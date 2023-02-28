@@ -18,24 +18,24 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class KIGraph(proto: GraphProto, opSetRegistry: OperatorSetRegistry) : Graph<KIONNXData<*>>(proto, opSetRegistry, KIOperatorFactory) {
-    private val preparedTensorsContext = KIContext()
+    private val preparedTensorsContext = GraphContext<KIONNXData<*>>()
 
     init {
         initializers as List<KITensor>
         for (operator in operators) {
-            when(operator.info.name) {
-                "LSTM" -> LSTMContext.appendContext(preparedTensorsContext, initializers, operator)
-                "DynamicQuantizeLSTM" -> DynamicQuantizeLSTMContext.appendContext(preparedTensorsContext, initializers, operator)
-                "GRU" -> GRUContext.appendContext(preparedTensorsContext, initializers, operator)
-                "Attention" -> AttentionContext.appendContext(preparedTensorsContext, initializers, operator)
-                "QAttention" -> QAttentionContext.appendContext(preparedTensorsContext, initializers, operator)
-                "MatMulInteger" -> MatMulIntegerVer10.MatMulIntegerPrepare.appendContext(preparedTensorsContext, initializers, operator)
+            when(operator.info.type) {
+                "LSTM" -> LSTMContext.appendContext(preparedTensorsContext, initializers as List<KITensor>, operator)
+                "DynamicQuantizeLSTM" -> DynamicQuantizeLSTMContext.appendContext(preparedTensorsContext, initializers as List<KITensor>, operator)
+                "GRU" -> GRUContext.appendContext(preparedTensorsContext, initializers as List<KITensor>, operator)
+                "Attention" -> AttentionContext.appendContext(preparedTensorsContext, initializers as List<KITensor>, operator)
+                "QAttention" -> QAttentionContext.appendContext(preparedTensorsContext, initializers as List<KITensor>, operator)
+                "MatMulInteger" -> MatMulIntegerVer10.MatMulIntegerPrepare.appendContext(preparedTensorsContext, initializers as List<KITensor>, operator)
             }
         }
     }
 
     override fun makeContext(root: GraphContext<KIONNXData<*>>?): GraphContext<KIONNXData<*>> {
-        val context = KIContext(root as? KIContext)
+        val context = GraphContext(root)
         context.mergeContext(preparedTensorsContext)
         return context
     }

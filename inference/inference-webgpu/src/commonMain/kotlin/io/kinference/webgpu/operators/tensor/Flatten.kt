@@ -3,25 +3,25 @@ package io.kinference.webgpu.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.extensions.indexAxis
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.graph.WebGPUContext
-import io.kinference.webgpu.ndarray.asTensor
-import io.kinference.webgpu.ndarray.indexAxis
+import io.kinference.webgpu.data.tensor.asTensor
+import io.kinference.webgpu.engine.WebGPUEnvironment
 
-sealed class Flatten(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(info, attributes, inputs, outputs) {
+sealed class Flatten(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in FlattenVer1.VERSION.asRange() -> FlattenVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in FlattenVer1.VERSION.asRange() -> FlattenVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Flatten operator: $version")
         }
     }
 }
 
-class FlattenVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Flatten(INFO, attributes, inputs, outputs) {
+class FlattenVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Flatten(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val INPUTS_INFO = listOf(
             IOInfo(0, ALL_DATA_TYPES, "input", optional = false, differentiable = true),
@@ -47,13 +47,11 @@ class FlattenVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>,
     }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        val context = contexts.graph as WebGPUContext
-
         val input = inputs[0]!!.data
         val actualAxis = input.indexAxis(axis)
 
         val newShape = makeShape(input.info.shape, actualAxis)
-        return listOf(input.reshape(newShape, context.gpuState).asTensor("output"))
+        return listOf(input.reshape(newShape, WebGPUEnvironment.gpuState).asTensor("output"))
     }
 
 }

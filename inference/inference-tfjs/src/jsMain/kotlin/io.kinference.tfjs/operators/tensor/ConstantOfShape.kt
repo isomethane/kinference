@@ -3,27 +3,29 @@ package io.kinference.tfjs.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.extensions.*
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.tfjs.data.tensors.TFJSTensor
 import io.kinference.tfjs.data.tensors.asTensor
-import io.kinference.tfjs.externals.core.tensor
-import io.kinference.tfjs.externals.extensions.*
+import io.kinference.ndarray.arrays.tensor
 
-sealed class ConstantOfShape(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<TFJSTensor, TFJSTensor>(info, attributes, inputs, outputs) {
+sealed class ConstantOfShape(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
+    : Operator<TFJSTensor, TFJSTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 9)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in ConstantOfShapeVer9.VERSION.asRange() -> ConstantOfShapeVer9(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in ConstantOfShapeVer9.VERSION.asRange() -> ConstantOfShapeVer9(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Constant operator: $version")
         }
     }
 }
 
 
-class ConstantOfShapeVer9(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : ConstantOfShape(INFO, attributes, inputs, outputs) {
+class ConstantOfShapeVer9(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
+    : ConstantOfShape(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = PRIMITIVE_DATA_TYPES
 
@@ -43,17 +45,16 @@ class ConstantOfShapeVer9(attributes: Map<String, Attribute<Any>>, inputs: List<
     private val value: TFJSTensor by attribute()
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<TFJSTensor?>): List<TFJSTensor?> {
-        val outputs = tidy {
+        val output = tidyNDArray {
             val shape = inputs[0]!!.data.dataInt().toTypedArray()
             if (shape.contains(0)) {
-                return@tidy arrayOf(tensor(emptyArray<Int>(), shape, value.data.dtype))
+                return@tidyNDArray tensor(emptyArray<Int>(), shape, value.data.dtype).toNDArray()
             }
 
-            val output = value.data.broadcastTo(shape)
-            return@tidy arrayOf(output)
+            return@tidyNDArray value.data.broadcastTo(shape)
         }
 
-        return listOf(outputs[0].asTensor("output"))
+        return listOf(output.asTensor("output"))
     }
 }
 

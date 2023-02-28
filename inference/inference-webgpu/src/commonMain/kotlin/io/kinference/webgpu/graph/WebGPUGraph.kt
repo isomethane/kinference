@@ -10,8 +10,7 @@ import io.kinference.webgpu.engine.WebGPUData
 import io.kinference.webgpu.operators.WebGPUOperatorFactory
 
 class WebGPUGraph(proto: GraphProto, opSetRegistry: OperatorSetRegistry) : Graph<WebGPUData<*>>(proto, opSetRegistry, WebGPUOperatorFactory) {
-    override fun makeContext(root: GraphContext<WebGPUData<*>>?): GraphContext<WebGPUData<*>> =
-        WebGPUContext((root as WebGPUContext).gpuState, root)
+    override fun makeContext(root: GraphContext<WebGPUData<*>>?): GraphContext<WebGPUData<*>> = GraphContext(root)
 
     override fun prepareInput(proto: TensorProto): WebGPUData<*> = WebGPUTensor.create(proto)
 }

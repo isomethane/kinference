@@ -1,7 +1,13 @@
 rootProject.name = "kinference"
 
-include(":ndarray")
-include(":serialization")
+include(":ndarray:ndarray-api")
+include(":ndarray:ndarray-core")
+include(":ndarray:ndarray-tfjs")
+include(":ndarray:ndarray-webgpu")
+
+include(":serialization:serializer-protobuf")
+include(":serialization:serializer-tiled")
+
 include(":inference:inference-api")
 include(":inference:inference-ir")
 include(":inference:inference-core")
@@ -13,6 +19,7 @@ include(":inference:inference-webgpu")
 include(":utils:test-utils")
 include(":utils:logger")
 include(":utils:model-profiler")
+include(":utils:common-utils")
 
 include(":utils:webgpu-utils:webgpu-compute")
 include(":utils:webgpu-utils:wgpu:jnr-generation-jvm")
@@ -21,9 +28,11 @@ include(":utils:webgpu-utils:wgpu:jnr-jvm")
 
 include(":adapters:multik:adapter-multik-core")
 include(":adapters:multik:adapter-multik-ort")
+include(":adapters:multik:adapter-multik-ort-gpu")
 
 include(":adapters:kmath:adapter-kmath-core")
 include(":adapters:kmath:adapter-kmath-ort")
+include(":adapters:kmath:adapter-kmath-ort-gpu")
 
 
 pluginManagement {

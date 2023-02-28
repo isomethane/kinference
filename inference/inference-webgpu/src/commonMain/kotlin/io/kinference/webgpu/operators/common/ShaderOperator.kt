@@ -1,16 +1,16 @@
 package io.kinference.webgpu.operators.common
 
 import io.kinference.attribute.Attribute
+import io.kinference.ndarray.WebGPUState
 import io.kinference.operator.Operator
 import io.kinference.operator.OperatorInfo
 import io.kinference.utils.webgpu.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.graph.WebGPUState
+import io.kinference.webgpu.engine.WebGPUEnvironment
 
 abstract class ShaderOperator(
-    protected val device: Device,
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : Operator<WebGPUTensor, WebGPUTensor>(info, attributes, inputs, outputs) {
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     protected abstract val shader: String
     protected open val shaderEntryPoint: String = "main"
     protected abstract val workGroupSize: IntArray
@@ -21,13 +21,13 @@ abstract class ShaderOperator(
     private val computePipeline: ComputePipeline
         get() {
             if (_computePipeline == null) {
-                _computePipeline = device.createComputePipeline(
+                _computePipeline = WebGPUEnvironment.gpuState.device.createComputePipeline(
                     ComputePipelineDescriptor(
-                        layout = device.createPipelineLayout(
-                            PipelineLayoutDescriptor(bindGroupLayouts = listOf(device.createBindGroupLayout(bindGroupLayoutDescriptor)))
+                        layout = WebGPUEnvironment.gpuState.device.createPipelineLayout(
+                            PipelineLayoutDescriptor(bindGroupLayouts = listOf(WebGPUEnvironment.gpuState.device.createBindGroupLayout(bindGroupLayoutDescriptor)))
                         ),
                         compute = ProgrammableStage(
-                            module = device.createShaderModule(ShaderModuleDescriptor(shader)),
+                            module = WebGPUEnvironment.gpuState.device.createShaderModule(ShaderModuleDescriptor(shader)),
                             entryPoint = shaderEntryPoint
                         )
                     )

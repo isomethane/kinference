@@ -23,27 +23,28 @@ object WebGPUOperatorFactory : OperatorFactory<WebGPUData<*>> {
 
     @Suppress("UNCHECKED_CAST")
     override fun create(
+        name: String,
         opType: String?,
         version: Int?,
         attributes: Map<String, Attribute<Any>>,
         inputs: List<String>,
         outputs: List<String>
     ): Operator<WebGPUData<*>, WebGPUData<*>>  = when (opType) {
-        "Add" -> Add(version, attributes, inputs, outputs)
-        "Constant" -> Constant(version, attributes, inputs, outputs)
-        "ConstantOfShape" -> ConstantOfShape(version, attributes, inputs, outputs)
-        "Div" -> Div(version, attributes, inputs, outputs)
-        "Equal" -> Equal(version, attributes, inputs, outputs)
-        "Flatten" -> Flatten(version, attributes, inputs, outputs)
-        "Greater" -> Greater(version, attributes, inputs, outputs)
-        "Less" -> Less(version, attributes, inputs, outputs)
-        "MatMul" -> MatMul(version, attributes, inputs, outputs)
-        "Mul" -> Mul(version, attributes, inputs, outputs)
-        "Or" -> Or(version, attributes, inputs, outputs)
-        "Reshape" -> Reshape(version, attributes, inputs, outputs)
-        "Squeeze" -> Squeeze(version, attributes, inputs, outputs)
-        "Sub" -> Sub(version, attributes, inputs, outputs)
-        "Unsqueeze" -> Unsqueeze(version, attributes, inputs, outputs)
+        "Add" -> Add(name, version, attributes, inputs, outputs)
+        "Constant" -> Constant(name, version, attributes, inputs, outputs)
+        "ConstantOfShape" -> ConstantOfShape(name, version, attributes, inputs, outputs)
+        "Div" -> Div(name, version, attributes, inputs, outputs)
+        "Equal" -> Equal(name, version, attributes, inputs, outputs)
+        "Flatten" -> Flatten(name, version, attributes, inputs, outputs)
+        "Greater" -> Greater(name, version, attributes, inputs, outputs)
+        "Less" -> Less(name, version, attributes, inputs, outputs)
+        "MatMul" -> MatMul(name, version, attributes, inputs, outputs)
+        "Mul" -> Mul(name, version, attributes, inputs, outputs)
+        "Or" -> Or(name, version, attributes, inputs, outputs)
+        "Reshape" -> Reshape(name, version, attributes, inputs, outputs)
+        "Squeeze" -> Squeeze(name, version, attributes, inputs, outputs)
+        "Sub" -> Sub(name, version, attributes, inputs, outputs)
+        "Unsqueeze" -> Unsqueeze(name, version, attributes, inputs, outputs)
         else -> error("Unsupported operator: $opType")
     } as Operator<WebGPUData<*>, WebGPUData<*>>
 }

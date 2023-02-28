@@ -5,24 +5,24 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.arrays.NumberNDArray
+import io.kinference.ndarray.arrays.NumberNDArrayCore
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class Add(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class Add(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 7)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in AddVer7.VERSION.asRange() -> AddVer7(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in AddVer7.VERSION.asRange() -> AddVer7(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Add operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class AddVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Add(INFO, attributes, inputs, outputs) {
+class AddVer7(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Add(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.UINT8,
@@ -53,7 +53,7 @@ class AddVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, out
     }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val result = (inputs[0]!!.data as NumberNDArray) + (inputs[1]!!.data as NumberNDArray)
+        val result = (inputs[0]!!.data as NumberNDArrayCore) + (inputs[1]!!.data as NumberNDArrayCore)
         return listOf(result.asTensor("C"))
     }
 }

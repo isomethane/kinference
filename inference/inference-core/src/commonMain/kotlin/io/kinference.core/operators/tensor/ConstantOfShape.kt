@@ -5,27 +5,26 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.Strides
-import io.kinference.ndarray.arrays.FloatNDArray
-import io.kinference.ndarray.arrays.LongNDArray
+import io.kinference.ndarray.arrays.*
+import io.kinference.ndarray.extensions.allocateNDArray
 import io.kinference.operator.*
 import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 
-sealed class ConstantOfShape(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class ConstantOfShape(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 9)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in ConstantOfShapeVer9.VERSION.asRange() -> ConstantOfShapeVer9(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in ConstantOfShapeVer9.VERSION.asRange() -> ConstantOfShapeVer9(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Constant operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class ConstantOfShapeVer9(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : ConstantOfShape(INFO, attributes, inputs, outputs) {
+class ConstantOfShapeVer9(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : ConstantOfShape(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = PRIMITIVE_DATA_TYPES
 
@@ -49,7 +48,7 @@ class ConstantOfShapeVer9(attributes: Map<String, Attribute<Any>>, inputs: List<
         val array = inputs[0]!!.data as LongNDArray
         val pointer = array.array.pointer()
         val shape = IntArray(array.linearSize) { pointer.getAndIncrement().toInt() }
-        val result = value.data.allocateNDArray(Strides(shape)).apply { fill(value.data.singleValue()) }
+        val result = allocateNDArray(value.data.type, Strides(shape)).apply { fill(value.data.singleValue()) }
         return listOf(result.asTensor("output"))
     }
 }

@@ -5,28 +5,26 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.arrays.*
 import io.kinference.operator.*
-import io.kinference.ndarray.Strides
-import io.kinference.ndarray.arrays.LongNDArray
-import io.kinference.ndarray.arrays.NDArray
-import io.kinference.ndarray.extensions.computeBlockSize
+import io.kinference.ndarray.extensions.allocateNDArray
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class GatherND(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class GatherND(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 11)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in GatherNDVer11.VERSION.asRange() -> GatherNDVer11(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in GatherNDVer11.VERSION.asRange() -> GatherNDVer11(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Constant operator: $version")
         }
     }
 }
 
 @OptIn(ExperimentalTime::class)
-class GatherNDVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : GatherND(INFO, attributes, inputs, outputs) {
+class GatherNDVer11(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : GatherND(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val ATTRIBUTES_INFO = listOf(AttributeInfo("batch_dims", setOf(AttributeProto.AttributeType.INT), false, 0L))
 
@@ -74,7 +72,7 @@ class GatherNDVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String
         val blockSize = input.computeBlockSize(fromDim = batchDims + indices.shape.last())
         val offsets = input.getOffsetsFromIndices(indices, batchDims)
         val outputShape = inferOutputShape(input.shape, indices.shape, batchDims)
-        val output = input.allocateNDArray(Strides(outputShape))
+        val output = allocateNDArray(input.type, Strides(outputShape))
         for ((i, offset) in offsets.withIndex()) {
             output.copyFrom(i * blockSize, input, offset, offset + blockSize)
         }

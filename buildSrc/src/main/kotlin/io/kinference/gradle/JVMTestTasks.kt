@@ -14,6 +14,7 @@ fun KotlinJvmTarget.configureTests() {
         filter {
             excludeTestsMatching("*.heavy_*")
             excludeTestsMatching("*.benchmark_*")
+            excludeTestsMatching("*.gpu_*")
         }
 
         testLogging {
@@ -67,6 +68,51 @@ fun KotlinJvmTarget.configureBenchmarkTests() {
 
         doFirst {
             S3Dependency.withDefaultS3Dependencies(this)
+        }
+
+        enabled = !project.hasProperty("disable-tests")
+    }
+}
+
+fun KotlinJvmTarget.configureGpuTests() {
+    testRuns.create("gpu").executionTask {
+        group = "verification"
+
+        maxHeapSize = "4G"
+
+        useJUnitPlatform()
+
+        filter {
+            includeTestsMatching("*.gpu_*")
+        }
+
+        testLogging {
+            events(TestLogEvent.STANDARD_ERROR, TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+        }
+
+        doFirst {
+            S3Dependency.withDefaultS3Dependencies(this)
+        }
+
+        enabled = !project.hasProperty("disable-tests")
+    }
+}
+
+// TODO rename?
+fun KotlinJvmTarget.configureGpuLightTests() {
+    testRuns.create("gpu").executionTask {
+        group = "verification"
+
+        maxHeapSize = "4G"
+
+        useJUnitPlatform()
+
+        filter {
+            includeTestsMatching("*.gpu_*")
+        }
+
+        testLogging {
+            events(TestLogEvent.STANDARD_ERROR, TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
         }
 
         enabled = !project.hasProperty("disable-tests")

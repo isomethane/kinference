@@ -1,6 +1,4 @@
-import io.kinference.gradle.configureBenchmarkTests
-import io.kinference.gradle.configureHeavyTests
-import io.kinference.gradle.configureTests
+import io.kinference.gradle.configureGpuLightTests
 
 plugins {
     kotlin("kapt") apply true
@@ -13,15 +11,11 @@ kotlin {
     js(BOTH) {
         browser()
 
-        configureTests()
-        configureHeavyTests()
-        configureBenchmarkTests()
+        configureGpuLightTests()
     }
 
     jvm {
-        configureTests()
-        configureHeavyTests()
-        configureBenchmarkTests()
+        configureGpuLightTests()
     }
 
     sourceSets {
@@ -29,7 +23,13 @@ kotlin {
             dependencies {
                 api(kotlin("stdlib"))
 
-                implementation(project(":inference:inference-ir"))
+                api(project(":ndarray:ndarray-api"))
+                api(project(":ndarray:ndarray-webgpu"))
+                implementation(project(":ndarray:ndarray-core"))
+
+                api(project(":inference:inference-api"))
+                api(project(":inference:inference-ir"))
+
                 implementation(project(":utils:webgpu-utils:webgpu-compute"))
             }
         }

@@ -10,22 +10,22 @@ import io.kinference.ndarray.arrays.pointers.acceptDouble
 import io.kinference.ndarray.extensions.applyWithBroadcast
 import io.kinference.operator.*
 import io.kinference.primitives.types.DataType
-import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.TensorProto
+import kotlin.time.ExperimentalTime
 
-sealed class Less(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class Less(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 7)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in LessVer7.VERSION.asRange() -> LessVer7(attributes, inputs, outputs)
-            else -> error("Unsupported version of Greater operator: $version")
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in LessVer7.VERSION.asRange() -> LessVer7(name, attributes, inputs, outputs)
+            else -> error("Unsupported version of Less operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class LessVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Less(INFO, attributes, inputs, outputs) {
+class LessVer7(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Less(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = PRIMITIVE_DATA_TYPES + TensorProto.DataType.BFLOAT16
 
@@ -39,9 +39,9 @@ class LessVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
         )
 
         internal val VERSION = VersionInfo(sinceVersion = 7)
-        private val INFO = OperatorInfo("Greater", emptyMap(), INPUTS_INFO, OUTPUTS_INFO, VERSION, OperatorInfo.DEFAULT_DOMAIN)
+        private val INFO = OperatorInfo("Less", emptyMap(), INPUTS_INFO, OUTPUTS_INFO, VERSION, OperatorInfo.DEFAULT_DOMAIN)
 
-        infix fun NDArray.less(other: NDArray): NDArray {
+        infix fun NDArrayCore.less(other: NDArrayCore): NDArrayCore {
             require(this.type == other.type) { "Arrays must have same types" }
 
             return applyWithBroadcast(other, DataType.BOOLEAN) { first, second, dest ->

@@ -1,5 +1,5 @@
 import io.kinference.gradle.configureBenchmarkTests
-import io.kinference.gradle.configureHeavyTests
+import io.kinference.gradle.configureGpuTests
 import io.kinference.gradle.Versions
 
 group = rootProject.group
@@ -7,7 +7,7 @@ version = rootProject.version
 
 kotlin {
     jvm {
-        configureHeavyTests()
+        configureGpuTests()
         configureBenchmarkTests()
     }
 
@@ -15,8 +15,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":inference:inference-api"))
-                api(project(":serialization"))
+                api(project(":serialization:serializer-protobuf"))
                 api(project(":utils:logger"))
+                api(project(":utils:common-utils"))
             }
         }
 

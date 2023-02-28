@@ -8,12 +8,12 @@ class SqueezeTest {
     private fun getTargetPath(dirName: String) = "/squeeze/$dirName/"
 
     @Test
-    fun test_squeeze() = TestRunner.runTest {
+    fun gpu_test_squeeze() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_squeeze"))
     }
 
     @Test
-    fun test_squeeze_with_negative_axes() = TestRunner.runTest {
+    fun gpu_test_squeeze_with_negative_axes() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_squeeze_negative_axes"))
     }
 }

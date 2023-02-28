@@ -7,24 +7,24 @@ import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
 import io.kinference.operator.*
 import io.kinference.ndarray.arrays.LongNDArray
-import io.kinference.ndarray.arrays.NumberNDArray
+import io.kinference.ndarray.arrays.NumberNDArrayCore
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class TopK(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class TopK(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 11)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in TopKVer11.VERSION.asRange() -> TopKVer11(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in TopKVer11.VERSION.asRange() -> TopKVer11(name, attributes, inputs, outputs)
             else -> error("Unsupported version of TopK operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class TopKVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : TopK(INFO, attributes, inputs, outputs) {
+class TopKVer11(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : TopK(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.UINT8,
@@ -60,12 +60,12 @@ class TopKVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, o
         private val INFO = OperatorInfo("ReduceSum", ATTRIBUTES_INFO, INPUTS_INFO, OUTPUTS_INFO, VERSION, OperatorInfo.DEFAULT_DOMAIN)
     }
 
-    private val axis: Int by attribute() { it: Long -> it.toInt() }
-    private val largest: Boolean by attribute() { it: Number -> it.toInt() == 1 }
-    private val sorted: Boolean by attribute() { it: Number -> it.toInt() == 1 }
+    private val axis: Int by attribute { it: Long -> it.toInt() }
+    private val largest: Boolean by attribute { it: Number -> it.toInt() == 1 }
+    private val sorted: Boolean by attribute { it: Number -> it.toInt() == 1 }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val input = inputs.first()!!.data as NumberNDArray
+        val input = inputs.first()!!.data as NumberNDArrayCore
         val k = (inputs[1]!!.data as LongNDArray).singleValue().toInt()
 
         val (values, indices) = input.topK(axis, k, largest, sorted)

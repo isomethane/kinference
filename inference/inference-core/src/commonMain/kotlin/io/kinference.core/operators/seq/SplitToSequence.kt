@@ -3,8 +3,7 @@ package io.kinference.core.operators.seq
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXDataType
 import io.kinference.core.data.seq.KIONNXSequence
-import io.kinference.core.data.tensor.KITensor
-import io.kinference.core.data.tensor.splitWithAxis
+import io.kinference.core.data.tensor.*
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
@@ -13,19 +12,19 @@ import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
 import kotlin.time.ExperimentalTime
 
-sealed class SplitToSequence(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KIONNXSequence>(info, attributes, inputs, outputs) {
+sealed class SplitToSequence(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KIONNXSequence>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 11)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in SplitToSequenceVer11.VERSION.asRange() -> SplitToSequenceVer11(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in SplitToSequenceVer11.VERSION.asRange() -> SplitToSequenceVer11(name, attributes, inputs, outputs)
             else -> error("Unsupported version of SplitToSequence operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class SplitToSequenceVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : SplitToSequence(INFO, attributes, inputs, outputs) {
+class SplitToSequenceVer11(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : SplitToSequence(name, INFO, attributes, inputs, outputs) {
     companion object {
         private const val DEFAULT_SPLIT_LENGTH = 1
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
@@ -55,9 +54,9 @@ class SplitToSequenceVer11(attributes: Map<String, Attribute<Any>>, inputs: List
 
         val input = inputs[0]!!
         val tensors = if (parts == null) {
-            input.splitWithAxis(input.data.shape[axis], axis, keepDims)
+            input.split(input.data.shape[axis], axis, keepDims)
         } else {
-            input.splitWithAxis(parts, axis)
+            input.split(parts, axis)
         }
 
         return listOf(KIONNXSequence("output_sequence", tensors, SequenceTypeInfo(tensors[0].info)))

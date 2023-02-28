@@ -5,20 +5,20 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class MulTest {
-    private fun getTargetPath(dirName: String) = "/mul/$dirName/"
+    private fun getTargetPath(dirName: String) = "mul/$dirName/"
 
     @Test
-    fun test_mul() = TestRunner.runTest {
+    fun gpu_test_mul() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_mul"))
     }
 
     @Test
-    fun test_mul_with_broadcast() = TestRunner.runTest {
+    fun gpu_test_mul_with_broadcast() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_mul_bcast"))
     }
 
     @Test
-    fun test_mul_defaults() = TestRunner.runTest {
+    fun gpu_test_mul_defaults() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_mul_example"))
     }
 }

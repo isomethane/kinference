@@ -5,19 +5,19 @@ import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.webgpu.operators.common.LogicalOperator
 
-sealed class Less(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
-    : LogicalOperator(info, attributes, inputs, outputs) {
+sealed class Less(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
+    : LogicalOperator(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 7)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in LessVer7.VERSION.asRange() -> LessVer7(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in LessVer7.VERSION.asRange() -> LessVer7(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Less operator: $version")
         }
     }
 }
 
-class LessVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Less(INFO, attributes, inputs, outputs) {
+class LessVer7(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Less(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = PRIMITIVE_DATA_TYPES
 

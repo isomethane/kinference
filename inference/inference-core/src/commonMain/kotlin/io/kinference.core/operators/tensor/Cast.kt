@@ -14,19 +14,19 @@ import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 
-sealed class Cast(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class Cast(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 6)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in CastVer6.VERSION.asRange() -> CastVer6(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in CastVer6.VERSION.asRange() -> CastVer6(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Cast operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Cast(INFO, attributes, inputs, outputs) {
+class CastVer6(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Cast(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
 
@@ -45,7 +45,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     private val toType: Int by attribute("to") { it: Number -> it.toInt() }
 
 
-    private fun castByte(array: ByteNDArray, to: TensorProto.DataType): NDArray {
+    private fun castByte(array: ByteNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -102,7 +102,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
         }
     }
 
-    private fun castShort(array: ShortNDArray, to: TensorProto.DataType): NDArray {
+    private fun castShort(array: ShortNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -160,7 +160,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castInt(array: IntNDArray, to: TensorProto.DataType): NDArray {
+    private fun castInt(array: IntNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -218,7 +218,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castLong(array: LongNDArray, to: TensorProto.DataType): NDArray {
+    private fun castLong(array: LongNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -276,7 +276,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castUByte(array: UByteNDArray, to: TensorProto.DataType): NDArray {
+    private fun castUByte(array: UByteNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -334,7 +334,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castUShort(array: UShortNDArray, to: TensorProto.DataType): NDArray {
+    private fun castUShort(array: UShortNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -392,7 +392,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castUInt(array: UIntNDArray, to: TensorProto.DataType): NDArray {
+    private fun castUInt(array: UIntNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -450,7 +450,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castULong(array: ULongNDArray, to: TensorProto.DataType): NDArray {
+    private fun castULong(array: ULongNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -508,7 +508,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castFloat(array: FloatNDArray, to: TensorProto.DataType): NDArray {
+    private fun castFloat(array: FloatNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> array
             TensorProto.DataType.UINT8 -> {
@@ -566,7 +566,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castDouble(array: DoubleNDArray, to: TensorProto.DataType): NDArray {
+    private fun castDouble(array: DoubleNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -624,7 +624,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
     }
 
 
-    private fun castBoolean(array: BooleanNDArray, to: TensorProto.DataType): NDArray {
+    private fun castBoolean(array: BooleanNDArray, to: TensorProto.DataType): NDArrayCore {
         return when (to) {
             TensorProto.DataType.FLOAT -> {
                 val output = FloatNDArray(FloatTiledArray(array.shape), array.strides)
@@ -685,7 +685,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
         val tensor = inputs.first()!!
         val to = TensorProto.DataType.fromValue(toType)!!
 
-        val casted: NDArray = when (tensor.data.type) {
+        val casted: NDArrayCore = when (tensor.data.type) {
             DataType.BYTE -> castByte(tensor.data as ByteNDArray, to)
             DataType.SHORT -> castShort(tensor.data as ShortNDArray, to)
             DataType.INT -> castInt(tensor.data as IntNDArray, to)

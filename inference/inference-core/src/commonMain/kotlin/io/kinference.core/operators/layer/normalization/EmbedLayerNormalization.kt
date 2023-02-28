@@ -2,9 +2,10 @@ package io.kinference.core.operators.layer.normalization
 
 import io.kinference.attribute.Attribute
 import io.kinference.core.data.tensor.KITensor
-import io.kinference.core.data.tensor.asTensor
+import io.kinference.core.data.tensor.asONNXTensors
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.model.ExecutionContext
 import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.arrays.pointers.*
 import io.kinference.operator.*
@@ -13,19 +14,32 @@ import io.kinference.protobuf.message.TensorProto
 import kotlin.math.sqrt
 import kotlin.time.ExperimentalTime
 
-sealed class EmbedLayerNormalization(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class EmbedLayerNormalization(
+    name: String,
+    info: OperatorInfo,
+    attributes: Map<String, Attribute<Any>>,
+    inputs: List<String>,
+    outputs: List<String>
+) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in EmbedLayerNormalizationVer1.VERSION.asRange() -> EmbedLayerNormalizationVer1(attributes, inputs, outputs)
-            else -> error("Unsupported version of EmbedLayerNormalization operator: $version")
-        }
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) =
+            when (version ?: DEFAULT_VERSION.sinceVersion) {
+                in EmbedLayerNormalizationVer1.VERSION.asRange() -> EmbedLayerNormalizationVer1(name, attributes, inputs, outputs)
+                else -> error("Unsupported version of EmbedLayerNormalization operator: $version")
+            }
     }
 }
 
 @ExperimentalTime
-class EmbedLayerNormalizationVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : EmbedLayerNormalization(INFO, attributes, inputs, outputs) {
+class EmbedLayerNormalizationVer1(
+    name: String,
+    attributes: Map<String, Attribute<Any>>,
+    inputs: List<String>,
+    outputs: List<String>
+) : EmbedLayerNormalization(name, INFO, attributes, inputs, outputs) {
+
     private val epsilon: Float by attribute()
 
     companion object {
@@ -46,18 +60,22 @@ class EmbedLayerNormalizationVer1(attributes: Map<String, Attribute<Any>>, input
             IOInfo(4, TYPE_CONSTRAINTS, "segment_embedding", true),
             IOInfo(5, TYPE_CONSTRAINTS, "gamma", false),
             IOInfo(6, TYPE_CONSTRAINTS, "beta", false),
-            IOInfo(7, setOf(TensorProto.DataType.INT32), "mask", true)
+            IOInfo(7, setOf(TensorProto.DataType.INT32), "mask", true),
+            IOInfo(8, setOf(TensorProto.DataType.INT32), "position_ids", true)
         )
 
         private val OUTPUTS_INFO = listOf(
             IOInfo(0, TYPE_CONSTRAINTS, "output", false),
-            IOInfo(1, setOf(TensorProto.DataType.INT32), "mask_index", false)
+            IOInfo(1, setOf(TensorProto.DataType.INT32), "mask_index", false),
+            IOInfo(2, TYPE_CONSTRAINTS, "embedding_sum", true)
         )
 
         internal val VERSION = VersionInfo(sinceVersion = 1)
         private val INFO = OperatorInfo("EmbedLayerNormalization", ATTRIBUTES_INFO, INPUTS_INFO, OUTPUTS_INFO, VERSION, domain = "com.microsoft")
 
-        fun createMaskIndices(mask: IntNDArray?, batchSize: Int, seqLen: Int): NumberNDArray {
+        private data class NormalizeResult(val output: FloatNDArray, val embeddingSum: FloatNDArray)
+
+        internal fun createMaskIndices(mask: IntNDArray?, batchSize: Int, seqLen: Int): NumberNDArrayCore {
             val maskIndices = MutableIntNDArray(shape = intArrayOf(batchSize))
             if (mask == null) return maskIndices
 
@@ -77,42 +95,56 @@ class EmbedLayerNormalizationVer1(attributes: Map<String, Attribute<Any>>, input
             return maskIndices
         }
 
-        fun normalize(epsilon: Float, inputIds: IntNDArray, segmentIds: IntNDArray?,
-                      wordEmbed: FloatNDArray, posEmbed: FloatNDArray, segmentEmbed: FloatNDArray?, gamma: FloatNDArray, beta: FloatNDArray): MutableFloatNDArray {
+        private fun normalize(
+            epsilon: Float, inputIds: IntNDArray, segmentIds: IntNDArray?, wordEmbed: FloatNDArray, posEmbed: FloatNDArray,
+            segmentEmbed: FloatNDArray?, gamma: FloatNDArray, beta: FloatNDArray, positionIds: IntNDArray?, context: ExecutionContext?
+        ): NormalizeResult {
             val (batchSize, seqLen) = inputIds.shape
             val (_, hiddenSize) = wordEmbed.shape
             val output = MutableFloatNDArray(shape = intArrayOf(batchSize, seqLen, hiddenSize))
+            val embeddingSum = MutableFloatNDArray(shape = intArrayOf(batchSize, seqLen, hiddenSize))
 
-            val inputIdsPointer = inputIds.array.pointer()
-            val segmentIdsPointer = segmentIds?.array?.pointer()
             for (batch in 0 until batchSize) {
-                for (posIdx in 0 until seqLen) {
+                val blockIdx = batch * seqLen
+                val inputIdsPointer = inputIds.array.pointer(blockIdx)
+                val segmentIdsPointer = segmentIds?.array?.pointer(blockIdx)
+                val positionIdsPointer = positionIds?.array?.pointer(blockIdx)
+
+                for (seqIdx in 0 until seqLen) {
                     val wordIdx = inputIdsPointer.getAndIncrement()
                     val segmentIdx = segmentIdsPointer?.getAndIncrement() ?: 0
+                    val positionIdx = positionIdsPointer?.getAndIncrement() ?: seqIdx
 
                     val wordEmbedOffset = wordIdx * hiddenSize
                     val segmentEmbedOffset = segmentIdx * hiddenSize
-                    val outputOffset = (posIdx + batch * seqLen) * hiddenSize
-                    val posEmbedOffset = posIdx * hiddenSize
+                    val outputOffset = (seqIdx + batch * seqLen) * hiddenSize
+                    val posEmbedOffset = positionIdx * hiddenSize
 
                     val wordEmbedPointer = wordEmbed.array.pointer(wordEmbedOffset)
                     val segmentEmbedPointer = segmentEmbed?.array?.pointer(segmentEmbedOffset)
-                    val outputPointer = output.array.pointer(outputOffset)
                     val posEmbedPointer = posEmbed.array.pointer(posEmbedOffset)
+                    val embeddingSumPointer = embeddingSum.array.pointer(outputOffset)
 
                     if (segmentEmbedPointer == null) {
-                        outputPointer.acceptDouble(wordEmbedPointer, posEmbedPointer, hiddenSize) { _, fst, snd ->
+                        embeddingSumPointer.acceptDouble(wordEmbedPointer, posEmbedPointer, hiddenSize) { _, fst, snd ->
                             fst + snd
                         }
+
                     } else {
-                        outputPointer.acceptTriple(wordEmbedPointer, posEmbedPointer, segmentEmbedPointer, hiddenSize) { _, fst, snd, trd ->
+                        embeddingSumPointer.acceptTriple(wordEmbedPointer, posEmbedPointer, segmentEmbedPointer, hiddenSize) { _, fst, snd, trd ->
                             fst + snd + trd
                         }
                     }
 
+                    val outputPointer = output.array.pointer(outputOffset)
+                    embeddingSumPointer.linearIndex = outputOffset
+
                     var acc = 0.0f
-                    outputPointer.linearIndex = outputOffset
-                    outputPointer.forEach(hiddenSize) { acc += it }
+
+                    embeddingSumPointer.forEach(hiddenSize) {
+                        outputPointer.setAndIncrement(it)
+                        acc += it
+                    }
 
                     val mean = acc / hiddenSize
                     acc = 0.0f
@@ -132,7 +164,7 @@ class EmbedLayerNormalizationVer1(attributes: Map<String, Attribute<Any>>, input
                 }
             }
 
-            return output
+            return NormalizeResult(output, embeddingSum)
         }
     }
 
@@ -145,9 +177,10 @@ class EmbedLayerNormalizationVer1(attributes: Map<String, Attribute<Any>>, input
         val gamma = inputs[5]!!.data as FloatNDArray
         val beta = inputs[6]!!.data as FloatNDArray
         val mask = inputs.getOrNull(7)?.data as IntNDArray?
+        val positionIds = inputs.getOrNull(8)?.data as IntNDArray?
 
-        val normalized = normalize(epsilon, inputIds, segmentIds, wordEmbed, posEmbed, segmentEmbed, gamma, beta).asTensor("output")
-        val maskIndices = createMaskIndices(mask, inputIds.shape[0], inputIds.shape[1]).asTensor("mask_index")
-        return listOf(normalized, maskIndices)
+        val (normalized, embedSum) = normalize(epsilon, inputIds, segmentIds, wordEmbed, posEmbed, segmentEmbed, gamma, beta, positionIds, contexts.execution)
+        val maskIndices = createMaskIndices(mask, inputIds.shape[0], inputIds.shape[1])
+        return listOf(normalized, maskIndices, embedSum).asONNXTensors(outputs)
     }
 }

@@ -2,18 +2,18 @@ package io.kinference.multik
 
 import ai.onnxruntime.*
 import io.kinference.data.*
-import io.kinference.ndarray.toIntArray
-import io.kinference.ndarray.toLongArray
 import io.kinference.ort.data.map.ORTMap
 import io.kinference.ort.data.seq.ORTSequence
 import io.kinference.ort.data.tensor.ORTTensor
+import io.kinference.protobuf.toIntArray
+import io.kinference.protobuf.toLongArray
 import org.jetbrains.kotlinx.multik.ndarray.data.*
 import java.nio.*
 
 sealed class ORTMultikData<T>(override val name: String?) : BaseONNXData<T> {
-    class MultikTensor(name: String?, override val data: MultiArray<Number, Dimension>) : ORTMultikData<MultiArray<Number, Dimension>>(name) {
+    class MultikTensor(name: String?, override val data: MultiArray<Number, Dimension>, val dataType: OnnxJavaType) : ORTMultikData<MultiArray<Number, Dimension>>(name) {
         override val type: ONNXDataType = ONNXDataType.ONNX_TENSOR
-        override fun rename(name: String): ORTMultikData<MultiArray<Number, Dimension>> = MultikTensor(name, data)
+        override fun rename(name: String): ORTMultikData<MultiArray<Number, Dimension>> = MultikTensor(name, data, dataType)
     }
 
     class MultikMap(name: String?, override val data: Map<Any, ORTMultikData<*>>) : ORTMultikData<Map<Any, ORTMultikData<*>>>(name) {
@@ -38,22 +38,33 @@ object ORTMultikTensorAdapter : ONNXDataAdapter<ORTMultikData.MultikTensor, ORTT
             OnnxJavaType.INT16 -> MemoryViewShortArray(tensor.shortBuffer.array())
             OnnxJavaType.INT32 -> MemoryViewIntArray(tensor.intBuffer.array())
             OnnxJavaType.INT64 -> MemoryViewLongArray(tensor.longBuffer.array())
+            OnnxJavaType.BOOL -> MemoryViewByteArray(tensor.byteBuffer.array())
             else -> error("$dtype type is not supported by Multik")
         } as MemoryView<Number>
-        val ndArray = NDArray(view, shape = tensor.info.shape.toIntArray(), dtype = dtype.resolveMultikDataType(), dim = dimensionOf(tensor.info.shape.size))
-        return ORTMultikData.MultikTensor(data.name, ndArray)
+        val ndArray = NDArray(view, shape = tensor.info.shape.toIntArray()/*, dtype = dtype.resolveMultikDataType()*/, dim = dimensionOf(tensor.info.shape.size))
+        return ORTMultikData.MultikTensor(data.name, ndArray, dtype)
     }
 
     override fun toONNXData(data: ORTMultikData.MultikTensor): ORTTensor {
         val arrayData = data.data.data
         val env = OrtEnvironment.getEnvironment()
+        val shapeLong = data.data.shape.toLongArray()
         val tensor = when (val array = arrayData.data) {
-            is DoubleArray -> OnnxTensor.createTensor(env, DoubleBuffer.wrap(array), data.data.shape.toLongArray())
-            is FloatArray -> OnnxTensor.createTensor(env, FloatBuffer.wrap(array), data.data.shape.toLongArray())
-            is LongArray -> OnnxTensor.createTensor(env, LongBuffer.wrap(array), data.data.shape.toLongArray())
-            is IntArray -> OnnxTensor.createTensor(env, IntBuffer.wrap(array), data.data.shape.toLongArray())
-            is ShortArray -> OnnxTensor.createTensor(env, ShortBuffer.wrap(array), data.data.shape.toLongArray())
-            is ByteArray -> OnnxTensor.createTensor(env, ByteBuffer.wrap(array), data.data.shape.toLongArray())
+            is DoubleArray -> OnnxTensor.createTensor(env, DoubleBuffer.wrap(array), shapeLong)
+            is FloatArray -> OnnxTensor.createTensor(env, FloatBuffer.wrap(array), shapeLong)
+            is LongArray -> OnnxTensor.createTensor(env, LongBuffer.wrap(array), shapeLong)
+            is IntArray -> OnnxTensor.createTensor(env, IntBuffer.wrap(array), shapeLong)
+            is ShortArray -> OnnxTensor.createTensor(env, ShortBuffer.wrap(array), shapeLong)
+            is ByteArray -> {
+                //TODO: rewrite it normally
+                if (data.dataType == OnnxJavaType.BOOL) {
+                    val booleanArray = BooleanArray(array.size) { array[it] == (1).toByte() }
+                    return ORTTensor.invoke(booleanArray, shapeLong, data.name)
+                    //OnnxTensor.createTensor(env, ByteBuffer.wrap(array).order(ByteOrder.LITTLE_ENDIAN), data.data.shape.toLongArray(), OnnxJavaType.BOOL)
+                } else {
+                    OnnxTensor.createTensor(env, ByteBuffer.wrap(array), shapeLong)
+                }
+            }
             else -> error("Unsupported data type")
         }
         return ORTTensor(data.name, tensor)
@@ -63,7 +74,7 @@ object ORTMultikTensorAdapter : ONNXDataAdapter<ORTMultikData.MultikTensor, ORTT
 object ORTMultikMapAdapter : ONNXDataAdapter<ORTMultikData.MultikMap, ORTMap> {
     override fun fromONNXData(data: ORTMap): ORTMultikData.MultikMap {
         val valueType = data.data.info.valueType
-        val mapValues = data.data.value.mapValues { ORTMultikData.MultikTensor(null, it.toScalarNDArray(valueType)) }
+        val mapValues = data.data.value.mapValues { ORTMultikData.MultikTensor(null, it.toScalarNDArray(valueType), valueType) }
         return ORTMultikData.MultikMap(data.name, mapValues)
     }
 
@@ -78,11 +89,11 @@ object ORTMultikSequenceAdapter : ONNXDataAdapter<ORTMultikData.MultikSequence, 
         val seq = if (data.data.info.sequenceOfMaps) {
             val mapType = data.data.info.mapInfo.valueType
             (elements as List<Map<*, *>>)
-                .map { entry -> entry.mapValues { ORTMultikData.MultikTensor(null, it.value!!.toScalarNDArray(mapType)) } }
+                .map { entry -> entry.mapValues { ORTMultikData.MultikTensor(null, it.value!!.toScalarNDArray(mapType), mapType) } }
                 .map { ORTMultikData.MultikMap(null, it as Map<Any, ORTMultikData<*>>) }
         } else {
             val valueType = data.data.info.sequenceType
-            elements.map { ORTMultikData.MultikTensor(null, it.toScalarNDArray(valueType)) }
+            elements.map { ORTMultikData.MultikTensor(null, it.toScalarNDArray(valueType), valueType) }
         }
         return ORTMultikData.MultikSequence(data.name, seq)
     }
@@ -103,7 +114,7 @@ private fun Any.toScalarNDArray(type: OnnxJavaType): NDArray<Number, Dimension> 
         OnnxJavaType.INT64 -> MemoryViewLongArray(longArrayOf(this as Long))
         else -> error("$type type is not supported by Multik")
     }
-    return NDArray(view, shape = intArrayOf(1), dim = dimensionOf(1), dtype = dtype) as NDArray<Number, Dimension>
+    return NDArray(view, shape = intArrayOf(1), dim = dimensionOf(1)/*, dtype = dtype*/) as NDArray<Number, Dimension>
 }
 
 private fun OnnxJavaType.resolveMultikDataType() = when (this) {

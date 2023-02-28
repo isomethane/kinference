@@ -5,25 +5,25 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.extensions.transpose
+import io.kinference.ndarray.arrays.transpose
 import io.kinference.ndarray.toIntArray
 import io.kinference.operator.*
 import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 
-sealed class Transpose(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class Transpose(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in TransposeVer1.VERSION.asRange() -> TransposeVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in TransposeVer1.VERSION.asRange() -> TransposeVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Constant operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class TransposeVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Transpose(INFO, attributes, inputs, outputs) {
+class TransposeVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Transpose(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
 
@@ -42,6 +42,6 @@ class TransposeVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String
     private val perm: IntArray? by attributeOrNull { it: LongArray? -> it?.toIntArray() }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        return listOf(inputs.first()!!.data.toMutable().transpose(perm).asTensor())
+        return listOf(inputs.first()!!.data.transpose(perm).asTensor())
     }
 }

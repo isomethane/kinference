@@ -12,19 +12,19 @@ import io.kinference.ndarray.extensions.*
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class MatMulIntegerToFloat(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class MatMulIntegerToFloat(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in MatMulIntegerToFloatVer1.VERSION.asRange() -> MatMulIntegerToFloatVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in MatMulIntegerToFloatVer1.VERSION.asRange() -> MatMulIntegerToFloatVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of MatMulIntegerToFloat operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class MatMulIntegerToFloatVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : MatMulIntegerToFloat(INFO, attributes, inputs, outputs) {
+class MatMulIntegerToFloatVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : MatMulIntegerToFloat(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val IN_TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.UINT8,
@@ -50,18 +50,18 @@ class MatMulIntegerToFloatVer1(attributes: Map<String, Attribute<Any>>, inputs: 
     }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val left = inputs[0]!!.data as NumberNDArray
-        val right = inputs[1]!!.data as NumberNDArray
+        val left = inputs[0]!!.data as NumberNDArrayCore
+        val right = inputs[1]!!.data as NumberNDArrayCore
         val leftScale = inputs[2]!!.data as FloatNDArray
         val rightScale = inputs[3]!!.data as FloatNDArray
 
-        val leftZeroPoint = inputs[4]?.data as? NumberNDArray
-        val rightZeroPoint = inputs[5]?.data as? NumberNDArray
+        val leftZeroPoint = inputs[4]?.data as? NumberNDArrayCore
+        val rightZeroPoint = inputs[5]?.data as? NumberNDArrayCore
 
         val bias = inputs[6]?.data as? FloatNDArray
 
-        val leftDequant = left.dequantize(leftZeroPoint, leftScale) as NumberNDArray
-        val rightDequant = right.dequantize(rightZeroPoint, rightScale) as NumberNDArray
+        val leftDequant = left.tryDequantize(leftZeroPoint, leftScale)
+        val rightDequant = right.tryDequantize(rightZeroPoint, rightScale)
 
         val outputArray = leftDequant.matmul(rightDequant, contexts.execution.asCoroutineContext())
 

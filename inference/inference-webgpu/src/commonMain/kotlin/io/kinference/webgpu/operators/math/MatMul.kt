@@ -1,32 +1,30 @@
 package io.kinference.webgpu.operators.math
 
 import io.kinference.attribute.Attribute
-import io.kinference.ndarray.Strides
+import io.kinference.data.ONNXData
+import io.kinference.graph.Contexts
+import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.broadcasting.Broadcasting
 import io.kinference.ndarray.broadcasting.unsqueezeFirst
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
-import io.kinference.utils.webgpu.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.graph.WebGPUContext
-import io.kinference.webgpu.ndarray.NDArrayInfo
-import io.kinference.webgpu.ndarray.WebGPUDataType
 import io.kinference.webgpu.operators.common.*
 import io.kinference.webgpu.utils.divUp
 
-sealed class MatMul(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
-    : CachingShaderOperator(info, attributes, inputs, outputs) {
+sealed class MatMul(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
+    : CachingShaderOperator(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in MatMulVer1.VERSION.asRange() -> MatMulVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in MatMulVer1.VERSION.asRange() -> MatMulVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of MatMul operator: $version")
         }
     }
 }
 
-class MatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : MatMul(INFO, attributes, inputs, outputs) {
+class MatMulVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : MatMul(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.FLOAT,
@@ -48,25 +46,24 @@ class MatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, 
         private val INFO = OperatorInfo("MatMul", emptySet(), INPUTS_INFO, OUTPUTS_INFO, VERSION, OperatorInfo.DEFAULT_DOMAIN)
     }
 
-    override fun operatorImplementation(inputInfo: List<NDArrayInfo?>, context: WebGPUContext): Operator<WebGPUTensor, WebGPUTensor> =
+    override fun <D : ONNXData<*, *>> operatorImplementation(inputInfo: List<NDArrayInfo?>, contexts: Contexts<D>): Operator<WebGPUTensor, WebGPUTensor> =
         when {
             inputInfo[1]!!.shape.size >= 2 && inputInfo[1]!!.shape.takeLast(2).all { it % 4 == 0 } -> MatMulPackedVec4(
-                context.gpuState.device, inputInfo[0]!!, inputInfo[1]!!,
-                info = info, attributes = attributes, inputs = inputs, outputs = outputs
+                inputInfo[0]!!, inputInfo[1]!!,
+                name = name, info = info, attributes = attributes, inputs = inputs, outputs = outputs
             )
             else -> MatMulPackedUnaligned(
-                context.gpuState.device, inputInfo[0]!!, inputInfo[1]!!,
-                info = info, attributes = attributes, inputs = inputs, outputs = outputs
+                inputInfo[0]!!, inputInfo[1]!!,
+                name = name, info = info, attributes = attributes, inputs = inputs, outputs = outputs
             )
         }
 }
 
 abstract class MatMulPacked(
-    device: Device,
     private val inputInfo0: NDArrayInfo,
     private val inputInfo1: NDArrayInfo,
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : BinaryOperator(device, info, attributes, inputs, outputs) {
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : BinaryOperator(name, info, attributes, inputs, outputs) {
 
     override val outputShape: IntArray = Broadcasting.broadcastShapeForMatmul(inputInfo0.shape, inputInfo1.shape)
     override val outputType: WebGPUDataType = inputInfo0.type
@@ -118,11 +115,10 @@ abstract class MatMulPacked(
 }
 
 class MatMulPackedVec4(
-    device: Device,
     inputInfo0: NDArrayInfo,
     inputInfo1: NDArrayInfo,
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : MatMulPacked(device, inputInfo0, inputInfo1, info, attributes, inputs, outputs) {
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : MatMulPacked(inputInfo0, inputInfo1, name, info, attributes, inputs, outputs) {
     companion object {
         const val VEC_SIZE = 4
     }
@@ -216,11 +212,10 @@ $dataOffsets
 }
 
 class MatMulPackedUnaligned(
-    device: Device,
     inputInfo0: NDArrayInfo,
     inputInfo1: NDArrayInfo,
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : MatMulPacked(device, inputInfo0, inputInfo1, info, attributes, inputs, outputs) {
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : MatMulPacked(inputInfo0, inputInfo1, name, info, attributes, inputs, outputs) {
     override val threadWorkX: Int = 4
     override val threadWorkY: Int = 4
 

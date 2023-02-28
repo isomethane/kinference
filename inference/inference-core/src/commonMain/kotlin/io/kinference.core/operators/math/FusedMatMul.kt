@@ -8,26 +8,26 @@ import io.kinference.graph.Contexts
 import io.kinference.graph.asCoroutineContext
 import io.kinference.operator.*
 import io.kinference.ndarray.arrays.NumberNDArray
+import io.kinference.ndarray.arrays.NumberNDArrayCore
 import io.kinference.ndarray.extensions.createScalarNDArray
-import io.kinference.ndarray.extensions.matmul
 import io.kinference.ndarray.toIntArray
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class FusedMatMul(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class FusedMatMul(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in FusedMatMulVer1.VERSION.asRange() -> FusedMatMulVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in FusedMatMulVer1.VERSION.asRange() -> FusedMatMulVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of FusedMatMul operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class FusedMatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : FusedMatMul(INFO, attributes, inputs, outputs) {
+class FusedMatMulVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : FusedMatMul(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.FLOAT16,
@@ -59,8 +59,8 @@ class FusedMatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<Stri
     private val transposeRight: Boolean by attribute("transB") { it: Long -> it == 1L }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val left = inputs[0]!!.data as NumberNDArray
-        val right = inputs[1]!!.data as NumberNDArray
+        val left = inputs[0]!!.data as NumberNDArrayCore
+        val right = inputs[1]!!.data as NumberNDArrayCore
 
         val actualLeft = if (transposeLeft) left.transpose(left.shape.indices.toIntArray().apply {
             this[lastIndex]--
@@ -73,7 +73,7 @@ class FusedMatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<Stri
         }) else right
 
         val output = actualLeft.matmul(actualRight, contexts.execution.asCoroutineContext())
-        output.timesAssign(createScalarNDArray(output.type, alpha))
+        output.timesAssign(createScalarNDArray(output.type, alpha) as NumberNDArray)
         return listOf(output.asTensor("Y"))
     }
 }

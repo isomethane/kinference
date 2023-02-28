@@ -5,25 +5,25 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.arrays.NumberNDArray
+import io.kinference.ndarray.arrays.NumberNDArrayCore
 import io.kinference.operator.*
 import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto.DataType
 
-sealed class CumSum(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class CumSum(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 11)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in CumSumVer11.VERSION.asRange() -> CumSumVer11(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in CumSumVer11.VERSION.asRange() -> CumSumVer11(name, attributes, inputs, outputs)
             else -> error("Unsupported version of CumSum operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class CumSumVer11(attributes: Map<String, Attribute<Any>> = emptyMap(), inputs: List<String>, outputs: List<String>) : CumSum(INFO, attributes, inputs, outputs) {
+class CumSumVer11(name: String, attributes: Map<String, Attribute<Any>> = emptyMap(), inputs: List<String>, outputs: List<String>) : CumSum(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(DataType.UINT32, DataType.UINT64, DataType.INT32, DataType.INT64, DataType.FLOAT, DataType.DOUBLE)
 
@@ -49,7 +49,7 @@ class CumSumVer11(attributes: Map<String, Attribute<Any>> = emptyMap(), inputs: 
     private val reverse by attribute { r: Number -> r.toInt() != 0 }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val input = inputs[0]!!.data as NumberNDArray
+        val input = inputs[0]!!.data as NumberNDArrayCore
         val axis = (inputs[1]!!.data.singleValue() as Number).toInt()
         return listOf(input.cumulativeSum(axis, exclusive, reverse).asTensor("y"))
     }

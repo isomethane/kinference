@@ -8,22 +8,21 @@ import io.kinference.graph.Contexts
 import io.kinference.operator.*
 import io.kinference.tfjs.data.tensors.TFJSTensor
 import io.kinference.tfjs.data.tensors.asTensor
-import io.kinference.tfjs.externals.extensions.cast
-import io.kinference.tfjs.externals.extensions.tidy
+import io.kinference.ndarray.extensions.cast
 
-sealed class Cast(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
-    : Operator<TFJSTensor, TFJSTensor>(info, attributes, inputs, outputs) {
+sealed class Cast(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
+    : Operator<TFJSTensor, TFJSTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 6)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in CastVer6.VERSION.asRange() -> CastVer6(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in CastVer6.VERSION.asRange() -> CastVer6(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Cast operator: $version")
         }
     }
 }
 
-class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Cast(INFO, attributes, inputs, outputs) {
+class CastVer6(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Cast(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
 
@@ -41,7 +40,7 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
 
     private val toType: Int by attribute("to") { it: Long -> it.toInt() }
 
-    private val tfjsType = when(TensorProto.DataType.fromValue(toType)) {
+    private val tfjsType = when(val type = TensorProto.DataType.fromValue(toType)) {
         TensorProto.DataType.INT64, TensorProto.DataType.UINT64,
         TensorProto.DataType.INT32, TensorProto.DataType.UINT32,
         TensorProto.DataType.INT16, TensorProto.DataType.UINT16,
@@ -53,14 +52,11 @@ class CastVer6(attributes: Map<String, Attribute<Any>>, inputs: List<String>, ou
 
         TensorProto.DataType.COMPLEX64, TensorProto.DataType.COMPLEX128 -> "complex64"
         TensorProto.DataType.STRING -> "string"
-        else -> error("Unsupported type")
+        else -> error("Unsupported type: $type")
     }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<TFJSTensor?>): List<TFJSTensor?> {
-        val outputs = tidy {
-            return@tidy arrayOf(inputs[0]!!.data.cast(tfjsType))
-        }
-
-        return listOf(outputs[0].asTensor("output"))
+        val input = inputs[0]!!.data
+        return listOf(input.cast(tfjsType).asTensor("output"))
     }
 }

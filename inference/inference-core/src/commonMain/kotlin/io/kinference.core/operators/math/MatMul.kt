@@ -6,25 +6,24 @@ import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
 import io.kinference.graph.asCoroutineContext
-import io.kinference.ndarray.arrays.NumberNDArray
-import io.kinference.ndarray.extensions.matmul
+import io.kinference.ndarray.arrays.NumberNDArrayCore
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class MatMul(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class MatMul(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in MatMulVer1.VERSION.asRange() -> MatMulVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in MatMulVer1.VERSION.asRange() -> MatMulVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of MatMul operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class MatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : MatMul(INFO, attributes, inputs, outputs) {
+class MatMulVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : MatMul(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.FLOAT16,
@@ -49,8 +48,8 @@ class MatMulVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, 
     }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val first = inputs[0]!!.data as NumberNDArray
-        val second = inputs[1]!!.data as NumberNDArray
+        val first = inputs[0]!!.data as NumberNDArrayCore
+        val second = inputs[1]!!.data as NumberNDArrayCore
         return listOf((first.matmul(second, contexts.execution.asCoroutineContext())).asTensor("Y"))
     }
 }

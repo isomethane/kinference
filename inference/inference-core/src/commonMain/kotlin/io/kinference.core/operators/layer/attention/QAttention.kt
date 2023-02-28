@@ -6,24 +6,25 @@ import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
 import io.kinference.ndarray.arrays.*
+import io.kinference.ndarray.extensions.tryDequantize
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class QAttention(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class QAttention(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in QAttentionVer1.VERSION.asRange() -> QAttentionVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in QAttentionVer1.VERSION.asRange() -> QAttentionVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of QAttention operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class QAttentionVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : QAttention(INFO, attributes, inputs, outputs) {
+class QAttentionVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : QAttention(name, INFO, attributes, inputs, outputs) {
 
     companion object {
         private val FLOATS = setOf(TensorProto.DataType.FLOAT, TensorProto.DataType.FLOAT16)
@@ -95,10 +96,10 @@ class QAttentionVer1(attributes: Map<String, Attribute<Any>>, inputs: List<Strin
     }*/
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val input = inputs[0]!!.data as NumberNDArray
-        val inputScale = inputs[3]!!.data as NumberNDArray
-        val inputZeroPoint = inputs.getOrNull(6)?.data as NumberNDArray?
-        val dequantInput = input.dequantize(inputZeroPoint, inputScale)
+        val input = inputs[0]!!.data as NumberNDArrayCore
+        val inputScale = inputs[3]!!.data as NumberNDArrayCore
+        val inputZeroPoint = inputs.getOrNull(6)?.data as NumberNDArrayCore?
+        val dequantInput = input.tryDequantize(inputZeroPoint, inputScale as FloatNDArray)
 
         val weights = inputs[1]!!
         val weightsScale = inputs[4]!!
@@ -111,7 +112,7 @@ class QAttentionVer1(attributes: Map<String, Attribute<Any>>, inputs: List<Strin
         val preparedBias = (contexts.graph!!.getOrNullValue("prepared_${bias.name}") ?: AttentionContext.prepareBias(bias, numHeads)) as KITensor
 
         val maskIndices = inputs.getOrNull(5)?.data as IntNDArray?
-        val past = inputs.getOrNull(8)?.data as NumberNDArray?
+        val past = inputs.getOrNull(8)?.data as NumberNDArrayCore?
 
         val (batchSize, seqLen, hiddenSize) = dequantInput.shape
         val (queries, keys, values) = AttentionVer1.initQueryKeyValue(

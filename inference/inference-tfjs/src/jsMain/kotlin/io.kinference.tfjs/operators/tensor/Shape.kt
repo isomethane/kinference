@@ -3,26 +3,26 @@ package io.kinference.tfjs.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.arrays.NDArrayTFJS
+import io.kinference.ndarray.extensions.*
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.tfjs.data.tensors.TFJSTensor
 import io.kinference.tfjs.data.tensors.asTensor
-import io.kinference.tfjs.externals.core.tensor
-import io.kinference.tfjs.externals.extensions.tidy
 
-sealed class Shape(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
-    : Operator<TFJSTensor, TFJSTensor>(info, attributes, inputs, outputs) {
+sealed class Shape(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
+    : Operator<TFJSTensor, TFJSTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1, untilVersion = 15)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in ShapeVer1.VERSION.asRange() -> ShapeVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in ShapeVer1.VERSION.asRange() -> ShapeVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Constant operator: $version")
         }
     }
 }
 
-class ShapeVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Shape(INFO, attributes, inputs, outputs) {
+class ShapeVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Shape(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
 
@@ -36,12 +36,12 @@ class ShapeVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, o
 
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<TFJSTensor?>): List<TFJSTensor?> {
-        val outputs = tidy {
-            val input = inputs[0]!!
-            val inputShape = input.data.shape
-            return@tidy arrayOf(tensor(inputShape, arrayOf(inputShape.size), "int32"))
+        val output = tidyNDArray {
+            val input = inputs[0]!!.data
+            val inputShape = input.shape
+            return@tidyNDArray NDArrayTFJS.int(inputShape, arrayOf(inputShape.size))
         }
 
-        return listOf(outputs[0].asTensor("shape"))
+        return listOf(output.asTensor("shape"))
     }
 }

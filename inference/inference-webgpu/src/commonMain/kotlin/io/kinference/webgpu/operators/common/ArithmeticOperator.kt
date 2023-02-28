@@ -1,43 +1,40 @@
 package io.kinference.webgpu.operators.common
 
 import io.kinference.attribute.Attribute
-import io.kinference.ndarray.Strides
-import io.kinference.ndarray.broadcasting.Broadcasting
+import io.kinference.data.ONNXData
+import io.kinference.graph.Contexts
+import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.broadcasting.unsqueezeFirst
 import io.kinference.operator.Operator
 import io.kinference.operator.OperatorInfo
-import io.kinference.utils.webgpu.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.graph.WebGPUContext
-import io.kinference.webgpu.ndarray.*
 import io.kinference.webgpu.utils.DEFAULT_WORK_GROUP_SIZE_1D
 import io.kinference.webgpu.utils.divUp
 
 abstract class ArithmeticOperator(
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : CachingShaderOperator(info, attributes, inputs, outputs) {
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : CachingShaderOperator(name, info, attributes, inputs, outputs) {
     abstract fun operation(input0: String, input1: String, output: String): String
 
-    override fun operatorImplementation(inputInfo: List<NDArrayInfo?>, context: WebGPUContext): Operator<WebGPUTensor, WebGPUTensor> =
+    override fun <D : ONNXData<*, *>> operatorImplementation(inputInfo: List<NDArrayInfo?>, contexts: Contexts<D>): Operator<WebGPUTensor, WebGPUTensor> =
         when {
             inputInfo[0]!!.shape.contentEquals(inputInfo[1]!!.shape) -> ArithmeticOperatorWithoutBroadcast(
-                context.gpuState.device, this::operation, inputInfo[0]!!,
-                info = info, attributes = attributes, inputs = inputs, outputs = outputs
+                this::operation, inputInfo[0]!!,
+                name = name, info = info, attributes = attributes, inputs = inputs, outputs = outputs
             )
             else -> ArithmeticOperatorWithBroadcast(
-                context.gpuState.device, this::operation, inputInfo[0]!!, inputInfo[1]!!,
-                info = info, attributes = attributes, inputs = inputs, outputs = outputs
+                this::operation, inputInfo[0]!!, inputInfo[1]!!,
+                name = name, info = info, attributes = attributes, inputs = inputs, outputs = outputs
             )
         }
 }
 
 class ArithmeticOperatorWithoutBroadcast(
-    device: Device,
     private val operation: (String, String, String) -> String,
     private val inputInfo: NDArrayInfo,
     override val outputType: WebGPUDataType = inputInfo.type,
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : BinaryOperator(device, info, attributes, inputs, outputs) {
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : BinaryOperator(name, info, attributes, inputs, outputs) {
     override val outputShape: IntArray = inputInfo.shape
 
     override val shader: String
@@ -70,14 +67,13 @@ fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>) {
 }
 
 class ArithmeticOperatorWithBroadcast(
-    device: Device,
     private val operation: (String, String, String) -> String,
     private val inputInfo0: NDArrayInfo,
     private val inputInfo1: NDArrayInfo,
     override val outputType: WebGPUDataType = inputInfo0.type,
-    info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : BinaryOperator(device, info, attributes, inputs, outputs) {
-    override val outputShape: IntArray = Broadcasting.broadcastShape(listOf(inputInfo0.shape, inputInfo1.shape))
+    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
+) : BinaryOperator(name, info, attributes, inputs, outputs) {
+    override val outputShape: IntArray = broadcastShape(listOf(inputInfo0.shape, inputInfo1.shape))
 
     override val shader: String
         get() {

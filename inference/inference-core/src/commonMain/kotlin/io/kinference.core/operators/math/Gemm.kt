@@ -5,7 +5,6 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.Strides
 import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.broadcasting.unsqueezeFirst
 import io.kinference.ndarray.extensions.allocateNDArray
@@ -16,19 +15,19 @@ import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 
-sealed class Gemm(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class Gemm(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 11)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in GemmVer11.VERSION.asRange() -> GemmVer11(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in GemmVer11.VERSION.asRange() -> GemmVer11(name, attributes, inputs, outputs)
             else -> error("Unsupported version of Gemm operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class GemmVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Gemm(INFO, attributes, inputs, outputs) {
+class GemmVer11(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Gemm(name, INFO, attributes, inputs, outputs) {
     private val alpha: Double by attribute { it: Number -> it.toDouble() }
     private val beta: Double by attribute { it: Number -> it.toDouble() }
 
@@ -65,11 +64,11 @@ class GemmVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, o
         internal val VERSION = VersionInfo(sinceVersion = 11)
         private val INFO = OperatorInfo("Gemm", ATTRIBUTES_INFO, INPUTS_INFO, OUTPUTS_INFO, VERSION, OperatorInfo.DEFAULT_DOMAIN)
 
-        private fun getDest(array: NDArray?, type: DataType, targetShape: IntArray): MutableNDArray {
+        private fun getDest(array: NDArrayCore?, type: DataType, targetShape: IntArray): MutableNDArrayCore {
             if (array == null) return allocateNDArray(type, Strides(targetShape))
             if (array.shape.contentEquals(targetShape)) return array.toMutable()
 
-            val dstArray = allocateNDArray(type, Strides(targetShape)) as MutableNumberNDArray
+            val dstArray = allocateNDArray(type, Strides(targetShape)) as MutableNumberNDArrayCore
             val unsqueezedShape = unsqueezeFirst(array.shape, targetShape.size)
 
             if (targetShape[1] != unsqueezedShape[1] && unsqueezedShape[1] == 1) {
@@ -88,8 +87,8 @@ class GemmVer11(attributes: Map<String, Attribute<Any>>, inputs: List<String>, o
     }
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val a = inputs[0]!!.data as NumberNDArray
-        val b = inputs[1]!!.data as NumberNDArray
+        val a = inputs[0]!!.data as NumberNDArrayCore
+        val b = inputs[1]!!.data as NumberNDArrayCore
 
         val m = if (!transA) a.shape[0] else a.shape[1]
         val n = if (!transB) b.shape[1] else b.shape[0]

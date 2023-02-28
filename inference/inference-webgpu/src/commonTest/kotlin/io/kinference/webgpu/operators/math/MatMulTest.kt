@@ -5,30 +5,30 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class MatMulTest {
-    private fun getTargetPath(dirName: String) = "/matmul/$dirName/"
+    private fun getTargetPath(dirName: String) = "matmul/$dirName/"
 
     @Test
-    fun test_matmul_2D() = TestRunner.runTest {
+    fun gpu_test_matmul_2D() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_matmul_2d"))
     }
 
     @Test
-    fun test_matmul_3D() = TestRunner.runTest {
+    fun gpu_test_matmul_3D() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_matmul_3d"))
     }
 
     @Test
-    fun test_matmul_4D() = TestRunner.runTest {
+    fun gpu_test_matmul_4D() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_matmul_4d"))
     }
 
     @Test
-    fun test_matmul_packed_vec4() = TestRunner.runTest {
+    fun gpu_test_matmul_packed_vec4() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_matmul_packed_vec4"))
     }
 
     @Test
-    fun test_matmul_packed_unaligned() = TestRunner.runTest {
+    fun gpu_test_matmul_packed_unaligned() = TestRunner.runTest {
         WebGPUAccuracyRunner.runFromResources(getTargetPath("test_matmul_packed_unaligned"))
     }
 }

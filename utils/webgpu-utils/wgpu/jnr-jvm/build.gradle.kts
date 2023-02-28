@@ -5,6 +5,7 @@ version = rootProject.version
 
 plugins {
     java
+    id("de.undercouch.download") version "5.3.1"
 }
 
 val wgpuNativeVersion = "0.11.0.1"

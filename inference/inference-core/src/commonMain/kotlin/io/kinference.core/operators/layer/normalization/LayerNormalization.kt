@@ -5,13 +5,11 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.arrays.DoubleNDArray
-import io.kinference.ndarray.arrays.FloatNDArray
+import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.arrays.pointers.acceptTriple
 import io.kinference.ndarray.arrays.pointers.forEach
 import io.kinference.ndarray.arrays.tiled.DoubleTiledArray
 import io.kinference.ndarray.arrays.tiled.FloatTiledArray
-import io.kinference.ndarray.extensions.indexAxis
 import io.kinference.operator.*
 import io.kinference.primitives.types.DataType
 import io.kinference.protobuf.message.AttributeProto.AttributeType
@@ -19,19 +17,19 @@ import io.kinference.protobuf.message.TensorProto
 import kotlin.math.sqrt
 import kotlin.time.ExperimentalTime
 
-sealed class LayerNormalization(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class LayerNormalization(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in LayerNormalizationVer1.VERSION.asRange() -> LayerNormalizationVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in LayerNormalizationVer1.VERSION.asRange() -> LayerNormalizationVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of LayerNormalization operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class LayerNormalizationVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : LayerNormalization(INFO, attributes, inputs, outputs) {
+class LayerNormalizationVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : LayerNormalization(name, INFO, attributes, inputs, outputs) {
     private val axis: Int by attribute { it: Number -> it.toInt() }
     private val epsilon: Float by attribute()
 

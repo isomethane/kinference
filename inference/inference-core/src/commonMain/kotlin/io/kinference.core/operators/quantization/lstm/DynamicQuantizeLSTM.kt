@@ -13,19 +13,19 @@ import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class DynamicQuantizeLSTM(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class DynamicQuantizeLSTM(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 1)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in DynamicQuantizeLSTMVer1.VERSION.asRange() -> DynamicQuantizeLSTMVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in DynamicQuantizeLSTMVer1.VERSION.asRange() -> DynamicQuantizeLSTMVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of DynamicQuantizeLSTM operator: $version")
         }
     }
 }
 
 @OptIn(ExperimentalTime::class)
-class DynamicQuantizeLSTMVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : DynamicQuantizeLSTM(INFO, attributes, inputs, outputs) {
+class DynamicQuantizeLSTMVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : DynamicQuantizeLSTM(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val BYTE_TYPES = setOf(
             TensorProto.DataType.UINT8,
@@ -120,15 +120,15 @@ class DynamicQuantizeLSTMVer1(attributes: Map<String, Attribute<Any>>, inputs: L
 
 
         val weightsAsLSTMWeights = QuantizedLSTMWeights(
-            preparedWeights.data as NumberNDArray,
+            preparedWeights.data as NumberNDArrayCore,
             preparedWeightsScale as FloatNDArray,
-            preparedWeightsZeroPoint as NumberNDArray
+            preparedWeightsZeroPoint as NumberNDArrayCore
         )
 
         val recurrentWeightsAsLSTMWeights = QuantizedLSTMWeights(
-            preparedRecurrentWeights.data as NumberNDArray,
+            preparedRecurrentWeights.data as NumberNDArrayCore,
             preparedRecurrentWeightsScale as FloatNDArray,
-            preparedRecurrentWeightsZeroPoint as NumberNDArray
+            preparedRecurrentWeightsZeroPoint as NumberNDArrayCore
         )
 
 
@@ -136,11 +136,11 @@ class DynamicQuantizeLSTMVer1(attributes: Map<String, Attribute<Any>>, inputs: L
             inputAsLSTMInput,
             weightsAsLSTMWeights,
             recurrentWeightsAsLSTMWeights,
-            preparedBias?.data as NumberNDArray?,
+            preparedBias?.data as NumberNDArrayCore?,
             sequenceLens?.data as IntNDArray?,
-            initialState?.data as NumberNDArray?,
-            initialCellState?.data as NumberNDArray?,
-            preparedPeepholes?.data as NumberNDArray?,
+            initialState?.data as NumberNDArrayCore?,
+            initialCellState?.data as NumberNDArrayCore?,
+            preparedPeepholes?.data as NumberNDArrayCore?,
             input.type,
             contexts.execution
         )

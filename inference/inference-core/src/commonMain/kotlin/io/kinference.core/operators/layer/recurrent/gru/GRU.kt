@@ -5,26 +5,25 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.arrays.IntNDArray
-import io.kinference.ndarray.arrays.NumberNDArray
+import io.kinference.ndarray.arrays.*
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import kotlin.time.ExperimentalTime
 
-sealed class GRU(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class GRU(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 7)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in GRUVer7.VERSION.asRange() -> GRUVer7(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in GRUVer7.VERSION.asRange() -> GRUVer7(name, attributes, inputs, outputs)
             else -> error("Unsupported version of GRU operator: $version")
         }
     }
 }
 
 @OptIn(ExperimentalTime::class)
-class GRUVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : GRU(INFO, attributes, inputs, outputs) {
+class GRUVer7(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : GRU(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = setOf(
             TensorProto.DataType.FLOAT16,
@@ -96,12 +95,12 @@ class GRUVer7(attributes: Map<String, Attribute<Any>>, inputs: List<String>, out
         val initialHiddenState = inputs.getOrNull(5)
 
         val (output, lastState) = gruLayer.apply(
-            input.data as NumberNDArray,
-            preparedWeights.data as NumberNDArray,
-            preparedRecurrentWeights.data as NumberNDArray,
-            preparedBias?.data as NumberNDArray?,
+            input.data as NumberNDArrayCore,
+            preparedWeights.data as NumberNDArrayCore,
+            preparedRecurrentWeights.data as NumberNDArrayCore,
+            preparedBias?.data as NumberNDArrayCore?,
             sequenceLens?.data as IntNDArray?,
-            initialHiddenState?.data as NumberNDArray?,
+            initialHiddenState?.data as NumberNDArrayCore?,
             input.data.type,
             linearBeforeReset,
             contexts

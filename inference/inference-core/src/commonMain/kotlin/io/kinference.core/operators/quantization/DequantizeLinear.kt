@@ -5,25 +5,26 @@ import io.kinference.core.data.tensor.KITensor
 import io.kinference.core.data.tensor.asTensor
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.arrays.NumberNDArray
+import io.kinference.ndarray.arrays.*
+import io.kinference.ndarray.extensions.tryDequantize
 import io.kinference.operator.*
 import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 
-sealed class DequantizeLinear(info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(info, attributes, inputs, outputs) {
+sealed class DequantizeLinear(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<KITensor, KITensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 10)
 
-        operator fun invoke(version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
-            in DequantizeLinearVer1.VERSION.asRange() -> DequantizeLinearVer1(attributes, inputs, outputs)
+        operator fun invoke(name: String, version: Int?, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) = when (version ?: DEFAULT_VERSION.sinceVersion) {
+            in DequantizeLinearVer1.VERSION.asRange() -> DequantizeLinearVer1(name, attributes, inputs, outputs)
             else -> error("Unsupported version of DequantizeLinear operator: $version")
         }
     }
 }
 
 @ExperimentalTime
-class DequantizeLinearVer1(attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : DequantizeLinear(INFO, attributes, inputs, outputs) {
+class DequantizeLinearVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : DequantizeLinear(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val IN_TYPE_CONSTRAINTS = setOf(TensorProto.DataType.INT8, TensorProto.DataType.UINT8)
 
@@ -49,12 +50,12 @@ class DequantizeLinearVer1(attributes: Map<String, Attribute<Any>>, inputs: List
 
 
     override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<KITensor?>): List<KITensor?> {
-        val input = inputs[0]!!.data as NumberNDArray
-        val scale = inputs[1]!!.data
-        val zeroPoint = inputs.getOrNull(2)?.data
+        val input = inputs[0]!!.data as NumberNDArrayCore
+        val scale = inputs[1]!!.data as FloatNDArray
+        val zeroPoint = inputs.getOrNull(2)?.data as? NumberNDArrayCore
 
         require(zeroPoint == null || scale.shape.contentEquals(zeroPoint.shape)) { "Zero point and scale tensors should have the same dims" }
 
-        return listOf(input.dequantize(zeroPoint, scale, axis).asTensor("y"))
+        return listOf(input.tryDequantize(zeroPoint, scale, axis).asTensor("y"))
     }
 }
