@@ -19,7 +19,7 @@ abstract class CachingShaderOperator(name: String, info: OperatorInfo, attribute
 
     abstract fun <D : ONNXData<*, *>> operatorImplementation(inputInfo: List<NDArrayInfo?>, contexts: Contexts<D>): Operator<WebGPUTensor, WebGPUTensor>
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val inputInfo = inputs.map { it?.data?.info }
         if (inputInfo != cachedInfo?.inputInfo) {
             cachedInfo = CachedShaderOperatorInfo(

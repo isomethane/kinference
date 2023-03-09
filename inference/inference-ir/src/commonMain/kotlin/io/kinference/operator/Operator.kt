@@ -6,13 +6,24 @@ import io.kinference.data.ONNXDataType
 import io.kinference.graph.Contexts
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
+import io.kinference.utils.Closeable
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import kotlin.time.ExperimentalTime
 
-class AttributeInfo(val name: String, val types: Set<AttributeProto.AttributeType>, val required: Boolean = false, val default: Any? = null) {
+class AttributeInfo(val name: String, val types: Set<AttributeProto.AttributeType>, val required: Boolean = false, val default: Any? = null) : Closeable {
     init {
         require(types.isNotEmpty()) { "Attribute info must have at least one type constraint!" }
+    }
+
+    override fun close() {
+        if (default is Closeable) return default.close()
+
+        if (default is List<*>) {
+            for (value in default) {
+                if (value is Closeable) value.close()
+            }
+        }
     }
 }
 
@@ -69,7 +80,7 @@ abstract class Operator<in T : ONNXData<*, *>, out U : ONNXData<*, *>>(
     val attributes: Map<String, Attribute<Any>> = emptyMap(),
     val inputs: List<String>,
     val outputs: List<String>
-) {
+) : Closeable {
     val type: String
      get() = info.type
 
@@ -123,17 +134,9 @@ abstract class Operator<in T : ONNXData<*, *>, out U : ONNXData<*, *>>(
         }
     }
 
-    fun <D : ONNXData<*, *>> applyWithCheck(contexts: Contexts<D>, inputs: List<T?>): List<U?> {
+    suspend fun <D : ONNXData<*, *>> applyWithCheck(contexts: Contexts<D>, inputs: List<T?>): List<U?> {
         check(info.inputs, inputs, "input")
         val outputs = apply(contexts, inputs)
-        require(outputs.size >= this.outputs.size) { "Operator '${info.type}' doesn't provide expected output size\nPresent: ${outputs.size}, Expected: at least ${this.outputs.size}" }
-        check(info.outputs, outputs, "output")
-        return outputs
-    }
-
-    suspend fun <D : ONNXData<*, *>> applyWithCheckSuspend(contexts: Contexts<D>, inputs: List<T?>): List<U?> {
-        check(info.inputs, inputs, "input")
-        val outputs = applySuspend(contexts, inputs)
         require(outputs.size >= this.outputs.size) { "Operator '${info.type}' doesn't provide expected output size\nPresent: ${outputs.size}, Expected: at least ${this.outputs.size}" }
         check(info.outputs, outputs, "output")
         return outputs
@@ -184,11 +187,18 @@ abstract class Operator<in T : ONNXData<*, *>, out U : ONNXData<*, *>>(
         return attributes[key]?.value as T? ?: if (!info.required) info.default as T? else null
     }
 
-    abstract fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<T?>): List<U?>
-    open fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, vararg inputs: T?): Collection<U?> = apply(contexts, inputs.toList())
+    abstract suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<T?>): List<U?>
+    open suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, vararg inputs: T?): Collection<U?> = apply(contexts, inputs.toList())
 
-    open suspend fun <D : ONNXData<*, *>> applySuspend(contexts: Contexts<D>, inputs: List<T?>): List<U?> = apply(contexts, inputs)
-    open suspend fun <D : ONNXData<*, *>> applySuspend(contexts: Contexts<D>, vararg inputs: T?): Collection<U?> = applySuspend(contexts, inputs.toList())
+    override fun close() {
+        for (attribute in attributes.values) {
+            attribute.close()
+        }
+
+        for (attributeInfo in info.attributes.values) {
+            attributeInfo.close()
+        }
+    }
 
     companion object {
         val ALL_DATA_TYPES = TensorProto.DataType.values().toHashSet() - TensorProto.DataType.UNDEFINED

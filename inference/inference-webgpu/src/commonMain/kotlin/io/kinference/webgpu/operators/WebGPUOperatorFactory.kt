@@ -15,7 +15,7 @@ import io.kinference.webgpu.operators.tensor.*
 
 object WebGPUAttributeFactory : AttributeFactory<WebGPUData<*>> {
     override fun createTensor(proto: TensorProto): WebGPUData<*> = WebGPUTensor.create(proto)
-    override fun createGraph(proto: GraphProto, opSet: OperatorSetRegistry): Graph<WebGPUData<*>> = WebGPUGraph(proto, opSet)
+    override suspend fun createGraph(proto: GraphProto, opSet: OperatorSetRegistry): Graph<WebGPUData<*>> = WebGPUGraph(proto, opSet)
 }
 
 object WebGPUOperatorFactory : OperatorFactory<WebGPUData<*>> {

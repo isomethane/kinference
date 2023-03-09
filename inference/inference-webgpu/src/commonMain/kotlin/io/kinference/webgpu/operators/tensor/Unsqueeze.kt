@@ -42,7 +42,7 @@ class UnsqueezeVer1(name: String, attributes: Map<String, Attribute<Any>>, input
 
     private val axes: IntArray by attribute { it: LongArray -> it.toIntArray() }
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         return listOf(inputs[0]!!.data.unsqueeze(axes, WebGPUEnvironment.gpuState).asTensor())
     }
 }

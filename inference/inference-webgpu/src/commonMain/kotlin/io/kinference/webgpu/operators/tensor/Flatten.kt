@@ -46,7 +46,7 @@ class FlattenVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs:
         return intArrayOf(firstDimension, secondDimension)
     }
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val input = inputs[0]!!.data
         val actualAxis = input.indexAxis(axis)
 

@@ -41,11 +41,7 @@ class ConstantOfShapeVer9(name: String, attributes: Map<String, Attribute<Any>>,
 
     private val value: WebGPUTensor by attribute()
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        error("Use applySuspend()")
-    }
-
-    override suspend fun <D : ONNXData<*, *>> applySuspend(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val shape = (inputs[0]!!.data.getData(WebGPUEnvironment.gpuState) as IntNDArrayData).data
         val size = shape.fold(1, Int::times)
         val data: TypedNDArrayData = when (val ndArrayData = value.data.getData()) {

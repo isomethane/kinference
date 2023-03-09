@@ -36,11 +36,7 @@ class ReshapeVer5(name: String, attributes: Map<String, Attribute<Any>>, inputs:
         private val INFO = OperatorInfo("Reshape", emptyMap(), INPUTS_INFO, OUTPUTS_INFO, VERSION, OperatorInfo.DEFAULT_DOMAIN)
     }
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        error("Use applySuspend()")
-    }
-
-    override suspend fun <D : ONNXData<*, *>> applySuspend(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val input = inputs[0]!!.data
         val targetShape = inputs[1]!!.data
 

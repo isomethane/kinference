@@ -1,6 +1,5 @@
 package io.kinference.webgpu.model
 
-import io.kinference.model.ExecutionContext
 import io.kinference.model.Model
 import io.kinference.operator.OperatorSetRegistry
 import io.kinference.protobuf.message.ModelProto
@@ -10,21 +9,12 @@ import io.kinference.webgpu.engine.WebGPUData
 import io.kinference.webgpu.engine.WebGPUEnvironment
 import io.kinference.webgpu.graph.WebGPUGraph
 
-class WebGPUModel(proto: ModelProto) : Model<WebGPUData<*>> {
-    val name: String = "${proto.domain}:${proto.modelVersion}"
-    private val opSet = OperatorSetRegistry(proto.opSetImport)
-    private val graph = WebGPUGraph(proto.graph!!, opSet)
-
-    override fun predict(input: List<WebGPUData<*>>, profile: Boolean, executionContext: ExecutionContext?): Map<String, WebGPUData<*>> {
-        error("Use predictSuspend with WebGPU backend")
-    }
-
-    override suspend fun predictSuspend(input: List<WebGPUData<*>>, profile: Boolean, executionContext: ExecutionContext?): Map<String, WebGPUData<*>> {
+class WebGPUModel(val name: String, val opSet: OperatorSetRegistry, val graph: WebGPUGraph) : Model<WebGPUData<*>> {
+    override suspend fun predict(input: List<WebGPUData<*>>, profile: Boolean): Map<String, WebGPUData<*>> {
         if (profile) logger.warning { "Profiling of models running on WebGPU backend is not supported" }
-        if (executionContext != null) logger.warning { "ExecutionContext for models running on WebGPU backend is not supported" }
 
         WebGPUEnvironment.getDevice()
-        val outputs = graph.executeSuspend(input).associateBy { it.name.orEmpty() }
+        val outputs = graph.execute(input).associateBy { it.name.orEmpty() }
         outputs.forEach { (_, value) ->
             if (value is WebGPUTensor) {
                 value.data.requestData(WebGPUEnvironment.gpuState)
@@ -38,7 +28,18 @@ class WebGPUModel(proto: ModelProto) : Model<WebGPUData<*>> {
         return outputs
     }
 
+    override fun close() {
+        graph.close()
+    }
+
     companion object {
+        suspend operator fun invoke(proto: ModelProto): WebGPUModel {
+            val name = "${proto.domain}:${proto.modelVersion}"
+            val opSet = OperatorSetRegistry(proto.opSetImport)
+            val graph = WebGPUGraph(proto.graph!!, opSet)
+            return WebGPUModel(name, opSet, graph)
+        }
+
         private val logger = LoggerFactory.create("io.kinference.webgpu.model.WebGPUModel")
     }
 }

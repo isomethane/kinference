@@ -37,7 +37,7 @@ object WebGPUEngine : InferenceEngine<WebGPUData<*>> {
         return loadData(path.toPath(), type)
     }
 
-    override fun loadModel(bytes: ByteArray): Model<WebGPUData<*>> {
+    override suspend fun loadModel(bytes: ByteArray): Model<WebGPUData<*>> {
         val modelScheme = ModelProto.decode(protoReader(bytes))
         return WebGPUModel(modelScheme)
     }

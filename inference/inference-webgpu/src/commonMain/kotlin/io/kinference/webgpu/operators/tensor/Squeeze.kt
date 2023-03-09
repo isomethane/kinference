@@ -42,7 +42,7 @@ class SqueezeVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs:
 
     private val axes: LongArray? by attributeOrNull()
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val squeezeAxes = axes?.toIntArray() ?: IntArray(0)
 
         return listOf(inputs[0]!!.data.squeeze(squeezeAxes, WebGPUEnvironment.gpuState).asTensor())

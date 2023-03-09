@@ -26,7 +26,7 @@ abstract class UnaryOperator(
     protected val outputInfo: NDArrayInfo
         get() = NDArrayInfo(outputShape, outputType)
 
-    override fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val output = NDArrayWebGPU(outputInfo, WebGPUEnvironment.gpuState)
         val bindGroup = WebGPUEnvironment.gpuState.device.createBindGroup(
             BindGroupDescriptor(

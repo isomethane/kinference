@@ -4,21 +4,32 @@ import io.kinference.data.ONNXData
 import io.kinference.graph.Graph
 import io.kinference.operator.OperatorSetRegistry
 import io.kinference.protobuf.message.*
+import io.kinference.utils.Closeable
 import kotlin.time.ExperimentalTime
 
-class Attribute<T>(proto: AttributeProto, val value: T) {
+class Attribute<T>(proto: AttributeProto, val value: T) : Closeable {
     val name: String = proto.name!!
     val type: AttributeProto.AttributeType = proto.type
 
     val refAttrName: String? = proto.refAttrName
+
+    override fun close() {
+        if (value is Closeable) return value.close()
+
+        if (value is List<*>) {
+            for (element in value) {
+                if (element is Closeable) element.close()
+            }
+        }
+    }
 }
 
 interface AttributeFactory<T : ONNXData<*, *>> {
     fun createTensor(proto: TensorProto): T
-    fun createGraph(proto: GraphProto, opSet: OperatorSetRegistry): Graph<T>
+    suspend fun createGraph(proto: GraphProto, opSet: OperatorSetRegistry): Graph<T>
 
     @ExperimentalTime
-    fun create(proto: AttributeProto, currentOpSet: OperatorSetRegistry): Attribute<Any> = when (proto.type) {
+    suspend fun create(proto: AttributeProto, currentOpSet: OperatorSetRegistry): Attribute<Any> = when (proto.type) {
         AttributeProto.AttributeType.FLOAT -> Attribute(proto, proto.f!!)
         AttributeProto.AttributeType.INT -> Attribute(proto, proto.i!!)
         AttributeProto.AttributeType.STRING -> Attribute(proto, proto.s!!)
