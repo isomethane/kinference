@@ -8,7 +8,9 @@ import io.kinference.operator.OperatorInfo
 import io.kinference.utils.webgpu.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.engine.WebGPUEnvironment
+import io.kinference.webgpu.engine.WebGPU
+import io.kinference.webgpu.utils.getBuffer
+import io.kinference.webgpu.utils.invoke
 
 abstract class BinaryOperator(
     name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
@@ -28,18 +30,18 @@ abstract class BinaryOperator(
         get() = NDArrayInfo(outputShape, outputType)
 
     override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        val output = NDArrayWebGPU(outputInfo, WebGPUEnvironment.gpuState)
-        val bindGroup = WebGPUEnvironment.gpuState.device.createBindGroup(
+        val output = NDArrayWebGPU(outputInfo)
+        val bindGroup = WebGPU.device.createBindGroup(
             BindGroupDescriptor(
-                layout = WebGPUEnvironment.gpuState.device.createBindGroupLayout(bindGroupLayoutDescriptor),
+                layout = WebGPU.device.createBindGroupLayout(bindGroupLayoutDescriptor),
                 entries = listOf(
-                    BindGroupEntry(0, BufferBinding(inputs[0]!!.data.getBuffer(WebGPUEnvironment.gpuState))),
-                    BindGroupEntry(1, BufferBinding(inputs[1]!!.data.getBuffer(WebGPUEnvironment.gpuState))),
-                    BindGroupEntry(2, BufferBinding(output.getBuffer(WebGPUEnvironment.gpuState))),
+                    BindGroupEntry(0, BufferBinding(inputs[0]!!.data.getBuffer())),
+                    BindGroupEntry(1, BufferBinding(inputs[1]!!.data.getBuffer())),
+                    BindGroupEntry(2, BufferBinding(output.getBuffer())),
                 )
             )
         )
-        performComputePass(WebGPUEnvironment.gpuState, bindGroup)
+        performComputePass(bindGroup)
         return listOf(output.asTensor("C"))
     }
 }

@@ -9,7 +9,7 @@ import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.engine.WebGPUEnvironment
+import io.kinference.webgpu.utils.getData
 
 sealed class ConstantOfShape(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
@@ -42,7 +42,7 @@ class ConstantOfShapeVer9(name: String, attributes: Map<String, Attribute<Any>>,
     private val value: WebGPUTensor by attribute()
 
     override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
-        val shape = (inputs[0]!!.data.getData(WebGPUEnvironment.gpuState) as IntNDArrayData).data
+        val shape = (inputs[0]!!.data.getData() as IntNDArrayData).data
         val size = shape.fold(1, Int::times)
         val data: TypedNDArrayData = when (val ndArrayData = value.data.getData()) {
             is IntNDArrayData -> IntNDArrayData(IntArray(size).apply { fill(ndArrayData.data[0]) })

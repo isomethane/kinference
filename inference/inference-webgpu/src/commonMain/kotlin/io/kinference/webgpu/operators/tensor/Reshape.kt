@@ -3,12 +3,11 @@ package io.kinference.webgpu.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.extensions.*
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.engine.WebGPUEnvironment
+import io.kinference.webgpu.utils.reshape
 
 sealed class Reshape(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
@@ -40,6 +39,6 @@ class ReshapeVer5(name: String, attributes: Map<String, Attribute<Any>>, inputs:
         val input = inputs[0]!!.data
         val targetShape = inputs[1]!!.data
 
-        return listOf(input.reshape(targetShape, WebGPUEnvironment.gpuState).asTensor("output"))
+        return listOf(input.reshape(targetShape).asTensor("output"))
     }
 }

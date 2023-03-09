@@ -34,7 +34,7 @@ class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state
             }
         }
 
-    fun getData(): TypedNDArrayData = (state as NDArrayData).data
+    fun getReadyData(): TypedNDArrayData = (state as NDArrayData).data
 
     suspend fun getData(gpuState: WebGPUState): TypedNDArrayData =
         when (val currentState = state) {

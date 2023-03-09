@@ -19,8 +19,8 @@ object WebGPUAssertions {
         val typeInfo = expected.info
         when (typeInfo.type) {
             TensorProto.DataType.FLOAT -> {
-                val expectedArray = (expected.data.getData() as FloatNDArrayData).data
-                val actualArray = (actual.data.getData() as FloatNDArrayData).data
+                val expectedArray = (expected.data.getReadyData() as FloatNDArrayData).data
+                val actualArray = (actual.data.getReadyData() as FloatNDArrayData).data
 
                 assertArrayEquals(
                     expectedArray,
@@ -31,8 +31,8 @@ object WebGPUAssertions {
                 )
             }
             TensorProto.DataType.INT32 -> {
-                val expectedArray = (expected.data.getData() as IntNDArrayData).data
-                val actualArray = (actual.data.getData() as IntNDArrayData).data
+                val expectedArray = (expected.data.getReadyData() as IntNDArrayData).data
+                val actualArray = (actual.data.getReadyData() as IntNDArrayData).data
 
                 assertArrayEquals(
                     expectedArray,
@@ -43,8 +43,8 @@ object WebGPUAssertions {
                 )
             }
             TensorProto.DataType.UINT32 -> {
-                val expectedArray = (expected.data.getData() as UIntNDArrayData).data
-                val actualArray = (actual.data.getData() as UIntNDArrayData).data
+                val expectedArray = (expected.data.getReadyData() as UIntNDArrayData).data
+                val actualArray = (actual.data.getReadyData() as UIntNDArrayData).data
 
                 assertArrayEquals(
                     expectedArray,

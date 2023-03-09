@@ -3,14 +3,13 @@ package io.kinference.webgpu.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
-import io.kinference.ndarray.extensions.squeeze
 import io.kinference.ndarray.toIntArray
 import io.kinference.operator.*
-import kotlin.time.ExperimentalTime
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.engine.WebGPUEnvironment
+import io.kinference.webgpu.utils.squeeze
+import kotlin.time.ExperimentalTime
 
 sealed class Squeeze(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
@@ -45,6 +44,6 @@ class SqueezeVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs:
     override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
         val squeezeAxes = axes?.toIntArray() ?: IntArray(0)
 
-        return listOf(inputs[0]!!.data.squeeze(squeezeAxes, WebGPUEnvironment.gpuState).asTensor())
+        return listOf(inputs[0]!!.data.squeeze(squeezeAxes).asTensor())
     }
 }

@@ -1,12 +1,12 @@
 package io.kinference.webgpu.operators.common
 
 import io.kinference.attribute.Attribute
-import io.kinference.ndarray.WebGPUState
 import io.kinference.operator.Operator
 import io.kinference.operator.OperatorInfo
 import io.kinference.utils.webgpu.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.engine.WebGPUEnvironment
+import io.kinference.webgpu.engine.WebGPU
+import io.kinference.webgpu.engine.beginComputePass
 
 abstract class ShaderOperator(
     name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
@@ -21,13 +21,13 @@ abstract class ShaderOperator(
     private val computePipeline: ComputePipeline
         get() {
             if (_computePipeline == null) {
-                _computePipeline = WebGPUEnvironment.gpuState.device.createComputePipeline(
+                _computePipeline = WebGPU.device.createComputePipeline(
                     ComputePipelineDescriptor(
-                        layout = WebGPUEnvironment.gpuState.device.createPipelineLayout(
-                            PipelineLayoutDescriptor(bindGroupLayouts = listOf(WebGPUEnvironment.gpuState.device.createBindGroupLayout(bindGroupLayoutDescriptor)))
+                        layout = WebGPU.device.createPipelineLayout(
+                            PipelineLayoutDescriptor(bindGroupLayouts = listOf(WebGPU.device.createBindGroupLayout(bindGroupLayoutDescriptor)))
                         ),
                         compute = ProgrammableStage(
-                            module = WebGPUEnvironment.gpuState.device.createShaderModule(ShaderModuleDescriptor(shader)),
+                            module = WebGPU.device.createShaderModule(ShaderModuleDescriptor(shader)),
                             entryPoint = shaderEntryPoint
                         )
                     )
@@ -36,8 +36,8 @@ abstract class ShaderOperator(
             return _computePipeline!!
         }
 
-    protected fun performComputePass(gpuState: WebGPUState, bindGroup: BindGroup) {
-        val computePass = gpuState.beginComputePass()
+    protected fun performComputePass(bindGroup: BindGroup) {
+        val computePass = WebGPU.beginComputePass()
         computePass.setPipeline(computePipeline)
         computePass.setBindGroup(0, bindGroup, listOf())
         computePass.dispatchWorkgroups(dispatchSize[0], dispatchSize.getOrNull(1) ?: 1, dispatchSize.getOrNull(2) ?: 1)

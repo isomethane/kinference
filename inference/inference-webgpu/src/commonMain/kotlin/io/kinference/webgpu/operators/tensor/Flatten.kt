@@ -8,7 +8,7 @@ import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.engine.WebGPUEnvironment
+import io.kinference.webgpu.utils.reshape
 
 sealed class Flatten(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
@@ -51,7 +51,7 @@ class FlattenVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs:
         val actualAxis = input.indexAxis(axis)
 
         val newShape = makeShape(input.info.shape, actualAxis)
-        return listOf(input.reshape(newShape, WebGPUEnvironment.gpuState).asTensor("output"))
+        return listOf(input.reshape(newShape).asTensor("output"))
     }
 
 }
