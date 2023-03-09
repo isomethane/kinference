@@ -1,5 +1,5 @@
 import io.kinference.gradle.Versions
-import io.kinference.gradle.configureTests
+import io.kinference.gradle.configureGpuLightTests
 
 group = rootProject.group
 version = rootProject.version
@@ -8,11 +8,11 @@ kotlin {
     js(BOTH) {
         browser()
 
-        configureTests()
+        configureGpuLightTests()
     }
 
     jvm {
-        configureTests()
+        configureGpuLightTests()
     }
 
     sourceSets {

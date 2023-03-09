@@ -7,19 +7,19 @@ import kotlin.test.assertContentEquals
 
 class ApiTest {
     @Test
-    fun testAdapterSupportedLimits() = TestRunner.runTest {
+    fun gpu_test_adapter_supported_limits() = TestRunner.runTest {
         val adapter = WebGPUInstance.requestAdapter()
         logger.info { "Adapter limits: ${adapter.limits.asString()}" }
     }
 
     @Test
-    fun testDeviceSupportedLimits() = TestRunner.runTest {
+    fun gpu_test_device_supported_limits() = TestRunner.runTest {
         val device = WebGPUInstance.requestAdapter().requestDevice()
         logger.info { "Device limits: ${device.limits.asString()}" }
     }
 
     @Test
-    fun testBasic() = TestRunner.runTest {
+    fun gpu_test_basic_compute_shader() = TestRunner.runTest {
         val numbers = intArrayOf(1, 2, 3, 4)
 
         val device = WebGPUInstance.requestAdapter().requestDevice()
