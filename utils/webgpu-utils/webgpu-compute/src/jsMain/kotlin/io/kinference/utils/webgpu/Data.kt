@@ -62,25 +62,29 @@ external class GPUCompilationMessage {
 
 actual class Limits(val record: Json) {
     actual constructor(
-        maxBindGroups: Int?,
-        maxDynamicStorageBuffersPerPipelineLayout: Int?,
-        maxStorageBuffersPerShaderStage: Int?,
-        maxStorageBufferBindingSize: Int?,
-        minStorageBufferOffsetAlignment: Int?,
-        maxComputeWorkgroupStorageSize: Int?,
-        maxComputeInvocationsPerWorkgroup: Int?,
-        maxComputeWorkgroupSizeX: Int?,
-        maxComputeWorkgroupSizeY: Int?,
-        maxComputeWorkgroupSizeZ: Int?,
-        maxComputeWorkgroupsPerDimension: Int?
+        maxBindGroups: Long?,
+        maxBindingsPerBindGroup: Long?,
+        maxDynamicStorageBuffersPerPipelineLayout: Long?,
+        maxStorageBuffersPerShaderStage: Long?,
+        maxStorageBufferBindingSize: Long?,
+        minStorageBufferOffsetAlignment: Long?,
+        maxBufferSize: Long?,
+        maxComputeWorkgroupStorageSize: Long?,
+        maxComputeInvocationsPerWorkgroup: Long?,
+        maxComputeWorkgroupSizeX: Long?,
+        maxComputeWorkgroupSizeY: Long?,
+        maxComputeWorkgroupSizeZ: Long?,
+        maxComputeWorkgroupsPerDimension: Long?
     ) : this(
         json(
             *listOf(
                 "maxBindGroups" to maxBindGroups,
+                "maxBindingsPerBindGroup" to maxBindingsPerBindGroup,
                 "maxDynamicStorageBuffersPerPipelineLayout" to maxDynamicStorageBuffersPerPipelineLayout,
                 "maxStorageBuffersPerShaderStage" to maxStorageBuffersPerShaderStage,
                 "maxStorageBufferBindingSize" to maxStorageBufferBindingSize,
                 "minStorageBufferOffsetAlignment" to minStorageBufferOffsetAlignment,
+                "maxBufferSize" to maxBufferSize,
                 "maxComputeWorkgroupStorageSize" to maxComputeWorkgroupStorageSize,
                 "maxComputeInvocationsPerWorkgroup" to maxComputeInvocationsPerWorkgroup,
                 "maxComputeWorkgroupSizeX" to maxComputeWorkgroupSizeX,
@@ -115,15 +119,17 @@ actual class RequestAdapterOptions actual constructor(
 
 actual typealias SupportedLimits = GPUSupportedLimits
 external class GPUSupportedLimits {
-    val maxBindGroups: Int
-    val maxDynamicStorageBuffersPerPipelineLayout: Int
-    val maxStorageBuffersPerShaderStage: Int
-    val maxStorageBufferBindingSize: Int
-    val minStorageBufferOffsetAlignment: Int
-    val maxComputeWorkgroupStorageSize: Int
-    val maxComputeInvocationsPerWorkgroup: Int
-    val maxComputeWorkgroupSizeX: Int
-    val maxComputeWorkgroupSizeY: Int
-    val maxComputeWorkgroupSizeZ: Int
-    val maxComputeWorkgroupsPerDimension: Int
+    val maxBindGroups: Long
+    val maxBindingsPerBindGroup: Long
+    val maxDynamicStorageBuffersPerPipelineLayout: Long
+    val maxStorageBuffersPerShaderStage: Long
+    val maxStorageBufferBindingSize: Long
+    val minStorageBufferOffsetAlignment: Long
+    val maxBufferSize: Long
+    val maxComputeWorkgroupStorageSize: Long
+    val maxComputeInvocationsPerWorkgroup: Long
+    val maxComputeWorkgroupSizeX: Long
+    val maxComputeWorkgroupSizeY: Long
+    val maxComputeWorkgroupSizeZ: Long
+    val maxComputeWorkgroupsPerDimension: Long
 }

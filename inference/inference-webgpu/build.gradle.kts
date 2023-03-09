@@ -44,12 +44,10 @@ kotlin {
 
         val jvmTest by getting {
             dependencies {
-                implementation("org.openjdk.jmh:jmh-core:1.25.1")
-                api("org.slf4j:slf4j-simple:${io.kinference.gradle.Versions.slf4j}")
                 implementation(kotlin("test-junit5"))
+                api("org.slf4j:slf4j-simple:${io.kinference.gradle.Versions.slf4j}")
 
-                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
-
+                implementation("org.openjdk.jmh:jmh-core:1.25.1")
                 configurations["kapt"].dependencies.add(implementation("org.openjdk.jmh:jmh-generator-annprocess:1.25.1"))
             }
         }

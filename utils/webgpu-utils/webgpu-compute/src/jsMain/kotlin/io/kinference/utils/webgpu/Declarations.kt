@@ -11,8 +11,5 @@ external class GPUBindGroupLayout
 actual typealias CommandBuffer = GPUCommandBuffer
 external class GPUCommandBuffer
 
-actual typealias ComputePipeline = GPUComputePipeline
-external class GPUComputePipeline
-
 actual typealias PipelineLayout = GPUPipelineLayout
 external class GPUPipelineLayout

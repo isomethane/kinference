@@ -1,5 +1,4 @@
-import io.kinference.gradle.configureBenchmarkTests
-import io.kinference.gradle.configureHeavyTests
+import io.kinference.gradle.Versions
 import io.kinference.gradle.configureTests
 
 group = rootProject.group
@@ -10,14 +9,10 @@ kotlin {
         browser()
 
         configureTests()
-        configureHeavyTests()
-        configureBenchmarkTests()
     }
 
     jvm {
         configureTests()
-        configureHeavyTests()
-        configureBenchmarkTests()
     }
 
     sourceSets {
@@ -25,7 +20,7 @@ kotlin {
             dependencies {
                 api(kotlin("stdlib"))
 
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}")
             }
         }
 
@@ -47,8 +42,7 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation("org.slf4j:slf4j-simple:1.7.30")
-                runtimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+                implementation("org.slf4j:slf4j-simple:${Versions.slf4j}")
             }
         }
     }

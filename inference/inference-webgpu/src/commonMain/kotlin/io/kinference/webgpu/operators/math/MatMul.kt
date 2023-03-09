@@ -136,19 +136,19 @@ class MatMulPackedVec4(
 
             return """
 struct Matrix {
-    data: array<vec4<$wgslType>>;
-};
+    data: array<vec4<$wgslType>>,
+}
 
-[[group(0), binding(0)]] var<storage, read> matrixA : Matrix;
-[[group(0), binding(1)]] var<storage, read> matrixB : Matrix;
-[[group(0), binding(2)]] var<storage, read_write> matrixC : Matrix;
+@group(0) @binding(0) var<storage, read> matrixA : Matrix;
+@group(0) @binding(1) var<storage, read> matrixB : Matrix;
+@group(0) @binding(2) var<storage, read_write> matrixC : Matrix;
 
 var<workgroup> localA : array<array<vec4<$wgslType>, $tileSizeX>, $tileSizeY>;
 var<workgroup> localB : array<array<vec4<$wgslType>, $tileSizeX>, $tileSizeY>;
 
-[[stage(compute), workgroup_size(${workGroupSize.joinToString()})]]
-fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>,
-        [[builtin(local_invocation_id)]] local_id : vec3<u32>) {
+@compute @workgroup_size(${workGroupSize.joinToString()})
+fn main(@builtin(global_invocation_id) global_id : vec3<u32>,
+        @builtin(local_invocation_id) local_id : vec3<u32>) {
     let global_row = i32(global_id.y) * $threadWorkY;
     let global_col = i32(global_id.x);
     
@@ -168,14 +168,14 @@ $dataOffsets
 
     for (var start = 0; start < ${n / vecSize}; start = start + $tileSizeX) {
         for (var inner_row = 0; inner_row < $threadWorkY; inner_row = inner_row + 1) {
-            if (global_row + inner_row < $m && start + tile_col < ${n / vecSize}) {
+            if global_row + inner_row < $m && start + tile_col < ${n / vecSize} {
                 localA[tile_row + inner_row][tile_col] = matrixA.data[offset0 + (global_row + inner_row) * ${n / vecSize} + (start + tile_col)];
             } else {
                 localA[tile_row + inner_row][tile_col] = vec4<$wgslType>($wgslType(0));
             }
         }
         for (var inner_row = 0; inner_row < $threadWorkY; inner_row = inner_row + 1) {
-            if (start * $threadWorkY + tile_row + inner_row < $n && global_col < ${k / vecSize}) {
+            if start * $threadWorkY + tile_row + inner_row < $n && global_col < ${k / vecSize} {
                 localB[tile_row + inner_row][tile_col] = matrixB.data[offset1 + (start * $vecSize + tile_row + inner_row) * ${k / vecSize} + global_col];
             } else {
                 localB[tile_row + inner_row][tile_col] = vec4<$wgslType>($wgslType(0));
@@ -200,7 +200,7 @@ $dataOffsets
     }
     
     for (var inner_row = 0; inner_row < $threadWorkY; inner_row = inner_row + 1) {
-        if (global_row + inner_row < $m && global_col < ${k / vecSize}) {
+        if global_row + inner_row < $m && global_col < ${k / vecSize} {
             matrixC.data[offset2 + (global_row + inner_row) * ${k / vecSize} + global_col] = acc[inner_row];
         }
     }
@@ -227,19 +227,19 @@ class MatMulPackedUnaligned(
 
             return """
 struct Matrix {
-    data: array<$wgslType>;
-};
+    data: array<$wgslType>,
+}
 
-[[group(0), binding(0)]] var<storage, read> matrixA : Matrix;
-[[group(0), binding(1)]] var<storage, read> matrixB : Matrix;
-[[group(0), binding(2)]] var<storage, read_write> matrixC : Matrix;
+@group(0) @binding(0) var<storage, read> matrixA : Matrix;
+@group(0) @binding(1) var<storage, read> matrixB : Matrix;
+@group(0) @binding(2) var<storage, read_write> matrixC : Matrix;
 
 var<workgroup> localA : array<array<$wgslType, $tileSizeX>, $tileSizeY>;
 var<workgroup> localB : array<array<$wgslType, $tileSizeX>, $tileSizeY>;
 
-[[stage(compute), workgroup_size(${workGroupSize.joinToString()})]]
-fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>,
-        [[builtin(local_invocation_id)]] local_id : vec3<u32>) {
+@compute @workgroup_size(${workGroupSize.joinToString()})
+fn main(@builtin(global_invocation_id) global_id : vec3<u32>,
+        @builtin(local_invocation_id) local_id : vec3<u32>) {
     let global_row = i32(global_id.y) * $threadWorkY;
     let global_col = i32(global_id.x) * $threadWorkX;
     
@@ -264,7 +264,7 @@ $dataOffsets
             let local_row = tile_row + inner_row;
             for (var inner_col = 0; inner_col < $threadWorkX; inner_col = inner_col + 1) {
                 let local_col = tile_col + inner_col;
-                if (global_row + inner_row < $m && start + local_col < $n) {
+                if global_row + inner_row < $m && start + local_col < $n {
                     localA[local_row][local_col] = matrixA.data[offset0 + (global_row + inner_row) * $n + (start + local_col)];
                 } else {
                     localA[local_row][local_col] = $wgslType(0);
@@ -275,7 +275,7 @@ $dataOffsets
             let local_row = tile_row + inner_row;
             for (var inner_col = 0; inner_col < $threadWorkX; inner_col = inner_col + 1) {
                 let local_col = tile_col + inner_col;
-                if (start + local_row < $n && global_col + inner_col < $k) {
+                if start + local_row < $n && global_col + inner_col < $k {
                     localB[local_row][local_col] = matrixB.data[offset1 + (start + local_row) * $k + (global_col + inner_col)];
                 } else {
                     localB[local_row][local_col] = $wgslType(0);
@@ -300,7 +300,7 @@ $dataOffsets
     
     for (var inner_row = 0; inner_row < $threadWorkY; inner_row = inner_row + 1) {
         for (var inner_col = 0; inner_col < $threadWorkX; inner_col = inner_col + 1) {
-            if (global_row + inner_row < $m && global_col + inner_col < $k) {
+            if global_row + inner_row < $m && global_col + inner_col < $k {
                 matrixC.data[offset2 + (global_row + inner_row) * $k + (global_col + inner_col)] = acc[inner_row][inner_col];
             }
         }

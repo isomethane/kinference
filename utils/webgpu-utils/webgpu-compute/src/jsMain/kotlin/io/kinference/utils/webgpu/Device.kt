@@ -19,7 +19,7 @@ actual class Device(private val gpuDevice: GPUDevice) {
         CommandEncoder(gpuDevice.createCommandEncoder(descriptor))
 
     actual fun createComputePipeline(descriptor: ComputePipelineDescriptor): ComputePipeline =
-        gpuDevice.createComputePipeline(descriptor)
+        ComputePipeline(gpuDevice.createComputePipeline(descriptor))
 
     actual fun createPipelineLayout(descriptor: PipelineLayoutDescriptor): PipelineLayout =
         gpuDevice.createPipelineLayout(descriptor)

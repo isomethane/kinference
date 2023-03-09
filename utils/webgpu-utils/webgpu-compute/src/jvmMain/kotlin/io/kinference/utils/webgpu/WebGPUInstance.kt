@@ -23,8 +23,9 @@ actual object WebGPUInstance {
         var wgpuError: Exception? = null
         var wgpuStatus: WGPURequestAdapterStatus? = null
 
+        val wgpuInstance = wgpuNative.wgpuCreateInstance(InstanceDescriptor().getPointerTo())
         wgpuNative.wgpuInstanceRequestAdapter(
-            nullptr,
+            wgpuInstance,
             options.getPointerTo(),
             { status, adapter, message, _ ->
                 wgpuStatus = status
@@ -42,9 +43,9 @@ actual object WebGPUInstance {
 
     private fun loadWgpuNative(): File {
         // FIXME file is copied each time
-        val libraryName = libraryFileName("wgpu")
+        val libraryName = libraryFileName("wgpu_native")
         val inputStream = WgpuNative::class.java.getResourceAsStream("/$libraryName")
-            ?: error("wgpu library not found")
+            ?: error("wgpu_native library not found")
 
         val tempDirectory = kotlin.io.path.createTempDirectory("wgpu")
 

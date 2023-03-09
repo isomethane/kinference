@@ -31,7 +31,7 @@ class EnumDeclarationGenerator(
                 addEnumConstant(
                     enumOptionName(option.name),
                     TypeSpec.anonymousClassBuilder()
-                        .addSuperclassConstructorParameter("%L", option.value)
+                        .addSuperclassConstructorParameter("%L", enumOptionValue(option.value))
                         .build()
                 )
             }
@@ -57,5 +57,19 @@ class EnumDeclarationGenerator(
         } else {
             removeRange(index, index + substring.length)
         }
+    }
+
+    private fun enumOptionValue(value: String): String {
+        return value
+            .split("|")
+            .joinToString(" or ") { s ->
+                s.split("<<").joinToString(" shl ") { constant ->
+                    if (constant.first().isLetter()) {
+                        "${enumOptionName(constant)}.value"
+                    } else {
+                        constant
+                    }
+                }
+            }
     }
 }

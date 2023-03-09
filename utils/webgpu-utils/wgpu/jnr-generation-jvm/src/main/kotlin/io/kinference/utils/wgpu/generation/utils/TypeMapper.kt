@@ -35,6 +35,7 @@ class TypeMapper(declarations: LibraryDeclarations) {
             typeName == "uint16_t" -> Unsigned16Type
             typeName == "uint32_t" -> Unsigned32Type
             typeName == "uint64_t" -> Unsigned64Type
+            typeName == "size_t" -> Unsigned64Type
             typeName == "int16_t" -> Signed16Type
             typeName == "int32_t" -> Signed32Type
             typeName == "int64_t" -> Signed64Type

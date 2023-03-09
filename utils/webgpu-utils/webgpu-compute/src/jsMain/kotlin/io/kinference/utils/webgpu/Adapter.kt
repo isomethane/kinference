@@ -7,12 +7,12 @@ actual class Adapter(val gpuAdapter: GPUAdapter) {
     actual val limits
         get() = gpuAdapter.limits
 
-    actual suspend fun requestDevice(descriptor: DeviceDescriptor): Device =
+    actual suspend fun requestDevice(descriptor: DeviceDescriptor?): Device =
         Device(gpuAdapter.requestDevice(descriptor).await())
 }
 
 external class GPUAdapter {
     val limits: GPUSupportedLimits
 
-    fun requestDevice(descriptor: DeviceDescriptor = definedExternally): Promise<GPUDevice>
+    fun requestDevice(descriptor: DeviceDescriptor? = definedExternally): Promise<GPUDevice>
 }

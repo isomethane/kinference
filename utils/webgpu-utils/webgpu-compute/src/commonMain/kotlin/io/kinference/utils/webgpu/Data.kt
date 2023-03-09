@@ -42,17 +42,19 @@ expect class CompilationMessage {
 }
 
 expect class Limits(
-    maxBindGroups: Int? = null,
-    maxDynamicStorageBuffersPerPipelineLayout: Int? = null,
-    maxStorageBuffersPerShaderStage: Int? = null,
-    maxStorageBufferBindingSize: Int? = null,
-    minStorageBufferOffsetAlignment: Int? = null,
-    maxComputeWorkgroupStorageSize: Int? = null,
-    maxComputeInvocationsPerWorkgroup: Int? = null,
-    maxComputeWorkgroupSizeX: Int? = null,
-    maxComputeWorkgroupSizeY: Int? = null,
-    maxComputeWorkgroupSizeZ: Int? = null,
-    maxComputeWorkgroupsPerDimension: Int? = null,
+    maxBindGroups: Long? = null,
+    maxBindingsPerBindGroup: Long? = null,
+    maxDynamicStorageBuffersPerPipelineLayout: Long? = null,
+    maxStorageBuffersPerShaderStage: Long? = null,
+    maxStorageBufferBindingSize: Long? = null,
+    minStorageBufferOffsetAlignment: Long? = null,
+    maxBufferSize: Long? = null,
+    maxComputeWorkgroupStorageSize: Long? = null,
+    maxComputeInvocationsPerWorkgroup: Long? = null,
+    maxComputeWorkgroupSizeX: Long? = null,
+    maxComputeWorkgroupSizeY: Long? = null,
+    maxComputeWorkgroupSizeZ: Long? = null,
+    maxComputeWorkgroupsPerDimension: Long? = null,
 )
 
 expect class MapModeFlags(
@@ -70,27 +72,31 @@ expect class RequestAdapterOptions(
 )
 
 expect class SupportedLimits {
-    val maxBindGroups: Int
-    val maxDynamicStorageBuffersPerPipelineLayout: Int
-    val maxStorageBuffersPerShaderStage: Int
-    val maxStorageBufferBindingSize: Int
-    val minStorageBufferOffsetAlignment: Int
-    val maxComputeWorkgroupStorageSize: Int
-    val maxComputeInvocationsPerWorkgroup: Int
-    val maxComputeWorkgroupSizeX: Int
-    val maxComputeWorkgroupSizeY: Int
-    val maxComputeWorkgroupSizeZ: Int
-    val maxComputeWorkgroupsPerDimension: Int
+    val maxBindGroups: Long
+    val maxBindingsPerBindGroup: Long
+    val maxDynamicStorageBuffersPerPipelineLayout: Long
+    val maxStorageBuffersPerShaderStage: Long
+    val maxStorageBufferBindingSize: Long
+    val minStorageBufferOffsetAlignment: Long
+    val maxBufferSize: Long
+    val maxComputeWorkgroupStorageSize: Long
+    val maxComputeInvocationsPerWorkgroup: Long
+    val maxComputeWorkgroupSizeX: Long
+    val maxComputeWorkgroupSizeY: Long
+    val maxComputeWorkgroupSizeZ: Long
+    val maxComputeWorkgroupsPerDimension: Long
 }
 
 fun SupportedLimits.asString() =
     """
         |{
         |   maxBindGroups: $maxBindGroups,
+        |   maxBindingsPerBindGroup: $maxBindingsPerBindGroup,
         |   maxDynamicStorageBuffersPerPipelineLayout: $maxDynamicStorageBuffersPerPipelineLayout,
         |   maxStorageBuffersPerShaderStage: $maxStorageBuffersPerShaderStage,
         |   maxStorageBufferBindingSize: $maxStorageBufferBindingSize,
         |   minStorageBufferOffsetAlignment: $minStorageBufferOffsetAlignment,
+        |   maxBufferSize: $maxBufferSize,
         |   maxComputeWorkgroupStorageSize: $maxComputeWorkgroupStorageSize,
         |   maxComputeInvocationsPerWorkgroup: $maxComputeInvocationsPerWorkgroup,
         |   maxComputeWorkgroupSizeX: $maxComputeWorkgroupSizeX,

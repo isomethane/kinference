@@ -22,7 +22,7 @@ actual class BufferData(val buffer: ArrayBuffer) {
 
     actual fun toIntArray(): IntArray = Int32Array(buffer).unsafeCast<IntArray>().copyOf()
 
-    actual fun toUIntArray(): UIntArray = Uint32Array(buffer).unsafeCast<UIntArray>().copyOf()
+    actual fun toUIntArray(): UIntArray = toIntArray().toUIntArray()
 
     actual fun toFloatArray(): FloatArray = Float32Array(buffer).unsafeCast<FloatArray>().copyOf()
 }

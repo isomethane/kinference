@@ -40,20 +40,20 @@ class ArithmeticOperatorWithoutBroadcast(
     override val shader: String
         get() = """
 struct InputMatrix {
-    data: array<${inputInfo.type.wgslType}>;
-};
+    data: array<${inputInfo.type.wgslType}>,
+}
 
 struct OutputMatrix {
-    data: array<${outputInfo.type.wgslType}>;
-};
+    data: array<${outputInfo.type.wgslType}>,
+}
 
-[[group(0), binding(0)]] var<storage, read> matrix0 : InputMatrix;
-[[group(0), binding(1)]] var<storage, read> matrix1 : InputMatrix;
-[[group(0), binding(2)]] var<storage, read_write> matrix2 : OutputMatrix;
+@group(0) @binding(0) var<storage, read> matrix0 : InputMatrix;
+@group(0) @binding(1) var<storage, read> matrix1 : InputMatrix;
+@group(0) @binding(2) var<storage, read_write> matrix2 : OutputMatrix;
 
-[[stage(compute), workgroup_size(${workGroupSize.joinToString()})]]
-fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>) {
-    if (global_id.x >= ${inputInfo.size}u) {
+@compute @workgroup_size(${workGroupSize.joinToString()})
+fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
+    if global_id.x >= ${inputInfo.size}u {
         return;
     }
     
@@ -101,20 +101,20 @@ class ArithmeticOperatorWithBroadcast(
 
             return """
 struct InputMatrix {
-    data: array<${inputInfo0.type.wgslType}>;
-};
+    data: array<${inputInfo0.type.wgslType}>,
+}
 
 struct OutputMatrix {
-    data: array<${outputInfo.type.wgslType}>;
-};
+    data: array<${outputInfo.type.wgslType}>,
+}
 
-[[group(0), binding(0)]] var<storage, read> matrix0 : InputMatrix;
-[[group(0), binding(1)]] var<storage, read> matrix1 : InputMatrix;
-[[group(0), binding(2)]] var<storage, read_write> matrix2 : OutputMatrix;
+@group(0) @binding(0) var<storage, read> matrix0 : InputMatrix;
+@group(0) @binding(1) var<storage, read> matrix1 : InputMatrix;
+@group(0) @binding(2) var<storage, read_write> matrix2 : OutputMatrix;
 
-[[stage(compute), workgroup_size(${workGroupSize.joinToString()})]]
-fn main([[builtin(global_invocation_id)]] global_id : vec3<u32>) {
-    if (${bounds.withIndex().joinToString(separator = " || ") { (index, value) -> "global_id[$index] >= ${value}u" }}) {
+@compute @workgroup_size(${workGroupSize.joinToString()})
+fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
+    if ${bounds.withIndex().joinToString(separator = " || ") { (index, value) -> "global_id[$index] >= ${value}u" }} {
         return;
     }
 $indices

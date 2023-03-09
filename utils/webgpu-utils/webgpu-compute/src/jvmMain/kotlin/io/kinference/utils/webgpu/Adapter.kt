@@ -11,7 +11,7 @@ actual class Adapter(private val wgpuAdapter: WGPUAdapter) {
             return SupportedLimits(limits)
         }
 
-    actual suspend fun requestDevice(descriptor: DeviceDescriptor): Device {
+    actual suspend fun requestDevice(descriptor: DeviceDescriptor?): Device {
         var wgpuDevice: WGPUDevice? = null
         var wgpuError: Exception? = null
         var wgpuStatus: WGPURequestDeviceStatus? = null

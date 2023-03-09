@@ -5,7 +5,7 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class FlattenTest {
-    private fun getTargetPath(dirName: String) = "/flatten/$dirName/"
+    private fun getTargetPath(dirName: String) = "flatten/$dirName/"
 
     @Test
     fun gpu_test_flatten_axis_0() = TestRunner.runTest {

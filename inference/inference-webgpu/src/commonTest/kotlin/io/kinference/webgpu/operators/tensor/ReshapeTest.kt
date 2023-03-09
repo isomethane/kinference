@@ -5,7 +5,7 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class ReshapeTest {
-    private fun getTargetPath(dirName: String) = "/reshape/$dirName/"
+    private fun getTargetPath(dirName: String) = "reshape/$dirName/"
 
     @Test
     fun gpu_test_reshape_with_extended_dimensions() = TestRunner.runTest {

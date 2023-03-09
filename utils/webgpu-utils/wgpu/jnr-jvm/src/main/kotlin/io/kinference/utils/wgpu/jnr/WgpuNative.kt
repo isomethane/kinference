@@ -8,6 +8,8 @@ import jnr.ffi.types.*
 interface WgpuNative {
     // webgpu.h
 
+    fun wgpuCreateInstance(@In descriptor: WGPUInstanceDescriptorPointer): WGPUInstance
+
     // Methods of Adapter
     fun wgpuAdapterGetLimits(@In adapter: WGPUAdapter, @Out limits: WGPUSupportedLimitsPointer): Boolean
     fun wgpuAdapterRequestDevice(@In adapter: WGPUAdapter, @In descriptor: WGPUDeviceDescriptorPointer, callback: WGPURequestDeviceCallback, userdata: Pointer)
@@ -21,12 +23,12 @@ interface WgpuNative {
     // Methods of CommandEncoder
     fun wgpuCommandEncoderBeginComputePass(@In commandEncoder: WGPUCommandEncoder, @In descriptor: WGPUComputePassDescriptorPointer): WGPUComputePassEncoder
     fun wgpuCommandEncoderCopyBufferToBuffer(@In commandEncoder: WGPUCommandEncoder, @In source: WGPUBuffer, @u_int64_t sourceOffset: Long, destination: WGPUBuffer, @u_int64_t destinationOffset: Long, @u_int64_t size: Long)
-    fun wgpuCommandEncoderFinish(@In commandEncoder: WGPUCommandEncoder, @In descriptor: WGPUCommandBufferDescriptor): WGPUCommandBuffer
+    fun wgpuCommandEncoderFinish(@In commandEncoder: WGPUCommandEncoder, @In descriptor: WGPUCommandBufferDescriptorPointer): WGPUCommandBuffer
 
     // Methods of ComputePassEncoder
-    fun wgpuComputePassEncoderDispatch(@In computePassEncoder: WGPUComputePassEncoder, @u_int32_t x: Long, @u_int32_t y: Long, @u_int32_t z: Long)
-    fun wgpuComputePassEncoderDispatchIndirect(@In computePassEncoder: WGPUComputePassEncoder, @In indirectBuffer: WGPUBuffer, @u_int64_t indirectOffset: Long)
-    fun wgpuComputePassEncoderEndPass(@In computePassEncoder: WGPUComputePassEncoder)
+    fun wgpuComputePassEncoderDispatchWorkgroups(@In computePassEncoder: WGPUComputePassEncoder, @u_int32_t workgroupCountX: Long, @u_int32_t workgroupCountY: Long, @u_int32_t workgroupCountZ: Long)
+    fun wgpuComputePassEncoderDispatchWorkgroupsIndirect(@In computePassEncoder: WGPUComputePassEncoder, @In indirectBuffer: WGPUBuffer, @u_int64_t indirectOffset: Long)
+    fun wgpuComputePassEncoderEnd(@In computePassEncoder: WGPUComputePassEncoder)
     fun wgpuComputePassEncoderSetBindGroup(@In computePassEncoder: WGPUComputePassEncoder, @u_int32_t groupIndex: Long, @In group: WGPUBindGroup, @u_int32_t dynamicOffsetCount: Long, @In dynamicOffsets: Pointer)
     fun wgpuComputePassEncoderSetPipeline(@In computePassEncoder: WGPUComputePassEncoder, @In pipeline: WGPUComputePipeline)
 
@@ -49,12 +51,12 @@ interface WgpuNative {
     fun wgpuInstanceRequestAdapter(@In instance: WGPUInstance, @In options: WGPURequestAdapterOptionsPointer, callback: WGPURequestAdapterCallback, userdata: Pointer)
 
     // Methods of Queue
-    fun wgpuQueueOnSubmittedWorkDone(@In queue: WGPUQueue, @u_int64_t signalValue: Long, callback: WGPUQueueWorkDoneCallback, userdata: Pointer)
+    fun wgpuQueueOnSubmittedWorkDone(@In queue: WGPUQueue, callback: WGPUQueueWorkDoneCallback, userdata: Pointer)
     fun wgpuQueueSubmit(@In queue: WGPUQueue, @u_int32_t commandCount: Long, @In commands: Pointer)
     fun wgpuQueueWriteBuffer(@In queue: WGPUQueue, @In buffer: WGPUBuffer, @u_int64_t bufferOffset: Long, @In data: Pointer, @size_t size: Long)
 
 
     // wgpu.h
 
-    fun wgpuDevicePoll(@In device: WGPUDevice, force_wait: Boolean)
+    fun wgpuDevicePoll(@In device: WGPUDevice, wait: Boolean, @In wrappedSubmissionIndex: Pointer)
 }

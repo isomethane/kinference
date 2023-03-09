@@ -22,13 +22,15 @@ expect class CommandEncoderDescriptor()
 expect class ComputePassDescriptor()
 
 expect class ComputePipelineDescriptor(
-    layout: PipelineLayout,
+    layout: PipelineLayout? = null,
     compute: ProgrammableStage,
 )
 
 expect class DeviceDescriptor(
-    requiredLimits: Limits = Limits()
+    requiredLimits: Limits
 )
+
+expect class InstanceDescriptor()
 
 expect class PipelineLayoutDescriptor(
     bindGroupLayouts: List<BindGroupLayout>,

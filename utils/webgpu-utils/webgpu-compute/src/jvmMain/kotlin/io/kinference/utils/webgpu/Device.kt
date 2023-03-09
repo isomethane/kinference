@@ -1,6 +1,7 @@
 package io.kinference.utils.webgpu
 
 import io.kinference.utils.wgpu.internal.getPointerTo
+import io.kinference.utils.wgpu.internal.nullptr
 import io.kinference.utils.wgpu.jnr.WGPUDevice
 import io.kinference.utils.wgpu.jnr.WGPUSupportedLimits
 
@@ -48,6 +49,6 @@ actual class Device(private val wgpuDevice: WGPUDevice) {
     actual fun destroy() = WebGPUInstance.wgpuNative.wgpuDeviceDestroy(wgpuDevice)
 
     actual suspend fun wait() {
-        WebGPUInstance.wgpuNative.wgpuDevicePoll(wgpuDevice, force_wait = true)
+        WebGPUInstance.wgpuNative.wgpuDevicePoll(wgpuDevice, wait = true, nullptr)
     }
 }

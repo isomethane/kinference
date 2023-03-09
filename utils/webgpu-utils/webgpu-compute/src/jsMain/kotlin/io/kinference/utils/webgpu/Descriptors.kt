@@ -30,13 +30,17 @@ actual class CommandEncoderDescriptor
 actual class ComputePassDescriptor
 
 actual class ComputePipelineDescriptor actual constructor(
-    val layout: PipelineLayout,
+    layout: PipelineLayout?,
     val compute: ProgrammableStage,
-)
+) {
+    val layout: Any = layout ?: "auto"
+}
 
 actual class DeviceDescriptor actual constructor(requiredLimits: Limits) {
     val requiredLimits: Json = requiredLimits.record
 }
+
+actual class InstanceDescriptor
 
 actual class PipelineLayoutDescriptor actual constructor(
     bindGroupLayouts: List<BindGroupLayout>,

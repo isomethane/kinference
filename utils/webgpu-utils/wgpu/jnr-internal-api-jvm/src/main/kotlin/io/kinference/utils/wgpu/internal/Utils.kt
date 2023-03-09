@@ -38,6 +38,6 @@ fun Struct.useDirectMemory() {
     useMemory(allocateDirect(Struct.size(this)))
 }
 
-fun Struct.getPointerTo(): Pointer = Struct.getMemory(this)
+fun Struct?.getPointerTo(): Pointer = this?.let { Struct.getMemory(it) } ?: nullptr
 
 fun allocateDirect(size: Int): Pointer = WgpuRuntime.runtime.memoryManager.allocateDirect(size)

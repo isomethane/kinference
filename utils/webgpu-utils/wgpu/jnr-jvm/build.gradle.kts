@@ -8,7 +8,7 @@ plugins {
     id("de.undercouch.download") version "5.3.1"
 }
 
-val wgpuNativeVersion = "0.11.0.1"
+val wgpuNativeVersion = "0.15.1.2"
 
 dependencies {
     api(project(":utils:webgpu-utils:wgpu:jnr-internal-api-jvm"))

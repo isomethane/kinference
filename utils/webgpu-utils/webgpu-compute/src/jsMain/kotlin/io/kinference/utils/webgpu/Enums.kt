@@ -29,7 +29,7 @@ actual enum class MapMode(val value: Long) {
     Write(0x0002),
 }
 
-actual enum class PowerPreference(val value: String) {
+actual enum class PowerPreference(val value: GPUPowerPreference) {
     LowPower("low-power"),
     HighPerformance("high-performance"),
 }

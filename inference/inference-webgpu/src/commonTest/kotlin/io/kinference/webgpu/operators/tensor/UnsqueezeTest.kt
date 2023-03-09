@@ -5,7 +5,7 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class UnsqueezeTest {
-    private fun getTargetPath(dirName: String) = "/unsqueeze/$dirName/"
+    private fun getTargetPath(dirName: String) = "unsqueeze/$dirName/"
 
     @Test
     fun gpu_test_unsqueeze_axis_0() = TestRunner.runTest {

@@ -12,11 +12,11 @@ actual class CommandEncoder(private val wgpuCommandEncoder: WGPUCommandEncoder) 
             )
         )
 
-    actual fun copyBufferToBuffer(source: io.kinference.utils.webgpu.Buffer, sourceOffset: Int, destination: io.kinference.utils.webgpu.Buffer, destinationOffset: Int, size: Int) =
+    actual fun copyBufferToBuffer(source: Buffer, sourceOffset: Int, destination: Buffer, destinationOffset: Int, size: Int) =
         WebGPUInstance.wgpuNative.wgpuCommandEncoderCopyBufferToBuffer(
             wgpuCommandEncoder, source.wgpuBuffer, sourceOffset.toLong(), destination.wgpuBuffer, destinationOffset.toLong(), size.toLong()
         )
 
     actual fun finish(descriptor: CommandBufferDescriptor): CommandBuffer =
-        CommandBuffer(WebGPUInstance.wgpuNative.wgpuCommandEncoderFinish(wgpuCommandEncoder, descriptor))
+        CommandBuffer(WebGPUInstance.wgpuNative.wgpuCommandEncoderFinish(wgpuCommandEncoder, descriptor.getPointerTo()))
 }

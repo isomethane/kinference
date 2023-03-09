@@ -40,7 +40,7 @@ abstract class ShaderOperator(
         val computePass = gpuState.beginComputePass()
         computePass.setPipeline(computePipeline)
         computePass.setBindGroup(0, bindGroup, listOf())
-        computePass.dispatch(dispatchSize[0], dispatchSize.getOrNull(1) ?: 1, dispatchSize.getOrNull(2) ?: 1)
-        computePass.endPass()
+        computePass.dispatchWorkgroups(dispatchSize[0], dispatchSize.getOrNull(1) ?: 1, dispatchSize.getOrNull(2) ?: 1)
+        computePass.end()
     }
 }

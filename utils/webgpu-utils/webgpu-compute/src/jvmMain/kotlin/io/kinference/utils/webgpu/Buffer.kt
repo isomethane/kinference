@@ -26,7 +26,7 @@ actual class Buffer(val wgpuBuffer: WGPUBuffer, actual val size: Int, val wgpuDe
             },
             nullptr
         )
-        WebGPUInstance.wgpuNative.wgpuDevicePoll(wgpuDevice, force_wait = true)
+        WebGPUInstance.wgpuNative.wgpuDevicePoll(wgpuDevice, wait = true, nullptr)
         if (wgpuStatus != WGPUBufferMapAsyncStatus.Success) {
             error("mapAsync() failed: status $wgpuStatus")
         }

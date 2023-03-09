@@ -40,8 +40,10 @@ actual class BufferBinding actual constructor(
 actual class BufferBindingLayout actual constructor(
     val type: BufferBindingType,
     val hasDynamicOffset: Boolean,
-    val minBindingSize: Int
-)
+    minBindingSize: Int
+) {
+    val minBindingSize: Long = if (minBindingSize == 0) -1 else minBindingSize.toLong()
+}
 
 actual class BufferUsageFlags(val value: Long) {
     actual constructor(vararg flags: BufferUsage) : this(flags.map { it.value }.fold(0, Int::or).toLong())
@@ -68,17 +70,19 @@ actual class CompilationMessage(private val wgpuCompilationMessage: WGPUCompilat
 }
 
 actual class Limits actual constructor(
-    val maxBindGroups: Int?,
-    val maxDynamicStorageBuffersPerPipelineLayout: Int?,
-    val maxStorageBuffersPerShaderStage: Int?,
-    val maxStorageBufferBindingSize: Int?,
-    val minStorageBufferOffsetAlignment: Int?,
-    val maxComputeWorkgroupStorageSize: Int?,
-    val maxComputeInvocationsPerWorkgroup: Int?,
-    val maxComputeWorkgroupSizeX: Int?,
-    val maxComputeWorkgroupSizeY: Int?,
-    val maxComputeWorkgroupSizeZ: Int?,
-    val maxComputeWorkgroupsPerDimension: Int?
+    val maxBindGroups: Long?,
+    val maxBindingsPerBindGroup: Long?,
+    val maxDynamicStorageBuffersPerPipelineLayout: Long?,
+    val maxStorageBuffersPerShaderStage: Long?,
+    val maxStorageBufferBindingSize: Long?,
+    val minStorageBufferOffsetAlignment: Long?,
+    val maxBufferSize: Long?,
+    val maxComputeWorkgroupStorageSize: Long?,
+    val maxComputeInvocationsPerWorkgroup: Long?,
+    val maxComputeWorkgroupSizeX: Long?,
+    val maxComputeWorkgroupSizeY: Long?,
+    val maxComputeWorkgroupSizeZ: Long?,
+    val maxComputeWorkgroupsPerDimension: Long?
 )
 
 actual class MapModeFlags(val value: Long) {
@@ -101,26 +105,30 @@ actual class RequestAdapterOptions actual constructor(
 }
 
 actual class SupportedLimits(private val wgpuSupportedLimits: WGPUSupportedLimits) {
-    actual val maxBindGroups: Int
-        get() = wgpuSupportedLimits.limits.maxBindGroups.toInt()
-    actual val maxDynamicStorageBuffersPerPipelineLayout: Int
-        get() = wgpuSupportedLimits.limits.maxDynamicStorageBuffersPerPipelineLayout.toInt()
-    actual val maxStorageBuffersPerShaderStage: Int
-        get() = wgpuSupportedLimits.limits.maxStorageBuffersPerShaderStage.toInt()
-    actual val maxStorageBufferBindingSize: Int
-        get() = wgpuSupportedLimits.limits.maxStorageBufferBindingSize.toInt()
-    actual val minStorageBufferOffsetAlignment: Int
-        get() = wgpuSupportedLimits.limits.minStorageBufferOffsetAlignment.toInt()
-    actual val maxComputeWorkgroupStorageSize: Int
-        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupStorageSize.toInt()
-    actual val maxComputeInvocationsPerWorkgroup: Int
-        get() = wgpuSupportedLimits.limits.maxComputeInvocationsPerWorkgroup.toInt()
-    actual val maxComputeWorkgroupSizeX: Int
-        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupSizeX.toInt()
-    actual val maxComputeWorkgroupSizeY: Int
-        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupSizeY.toInt()
-    actual val maxComputeWorkgroupSizeZ: Int
-        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupSizeZ.toInt()
-    actual val maxComputeWorkgroupsPerDimension: Int
-        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupsPerDimension.toInt()
+    actual val maxBindGroups: Long
+        get() = wgpuSupportedLimits.limits.maxBindGroups
+    actual val maxBindingsPerBindGroup: Long
+        get() = wgpuSupportedLimits.limits.maxBindingsPerBindGroup
+    actual val maxDynamicStorageBuffersPerPipelineLayout: Long
+        get() = wgpuSupportedLimits.limits.maxDynamicStorageBuffersPerPipelineLayout
+    actual val maxStorageBuffersPerShaderStage: Long
+        get() = wgpuSupportedLimits.limits.maxStorageBuffersPerShaderStage
+    actual val maxStorageBufferBindingSize: Long
+        get() = wgpuSupportedLimits.limits.maxStorageBufferBindingSize
+    actual val minStorageBufferOffsetAlignment: Long
+        get() = wgpuSupportedLimits.limits.minStorageBufferOffsetAlignment
+    actual val maxBufferSize: Long
+        get() = wgpuSupportedLimits.limits.maxBufferSize
+    actual val maxComputeWorkgroupStorageSize: Long
+        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupStorageSize
+    actual val maxComputeInvocationsPerWorkgroup: Long
+        get() = wgpuSupportedLimits.limits.maxComputeInvocationsPerWorkgroup
+    actual val maxComputeWorkgroupSizeX: Long
+        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupSizeX
+    actual val maxComputeWorkgroupSizeY: Long
+        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupSizeY
+    actual val maxComputeWorkgroupSizeZ: Long
+        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupSizeZ
+    actual val maxComputeWorkgroupsPerDimension: Long
+        get() = wgpuSupportedLimits.limits.maxComputeWorkgroupsPerDimension
 }

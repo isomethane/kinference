@@ -5,7 +5,7 @@ import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class ConstantOfShapeTest {
-    private fun getTargetPath(dirName: String) = "/constant_of_shape/$dirName/"
+    private fun getTargetPath(dirName: String) = "constant_of_shape/$dirName/"
 
     @Test
     fun gpu_test_ones() = TestRunner.runTest {
