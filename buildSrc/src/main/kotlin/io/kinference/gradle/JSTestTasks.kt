@@ -8,11 +8,7 @@ import org.jetbrains.kotlin.gradle.targets.js.KotlinJsPlatformTestRun
 
 fun KotlinJsPlatformTestRun.configureBrowsers() {
     executionTask.get().useKarma {
-        if (this@configureBrowsers.target.project.hasProperty("ci")) {
-            useFirefox()
-        } else {
-            useChrome()
-        }
+        useChrome()
     }
 }
 
