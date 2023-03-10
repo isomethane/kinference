@@ -4,7 +4,9 @@ import kotlinx.coroutines.await
 import org.khronos.webgl.ArrayBuffer
 import kotlin.js.Promise
 
-actual class Buffer(val gpuBuffer: GPUBuffer, actual val size: Int) {
+actual class Buffer(val gpuBuffer: GPUBuffer, private val size: Int) {
+    actual fun size(): Int = size
+
     actual fun destroy() = gpuBuffer.destroy()
 
     actual fun getMappedRange(offset: Int, size: Int): BufferData = BufferData(gpuBuffer.getMappedRange(offset, size))

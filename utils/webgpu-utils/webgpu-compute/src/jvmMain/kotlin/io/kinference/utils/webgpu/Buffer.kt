@@ -5,7 +5,9 @@ import io.kinference.utils.wgpu.jnr.WGPUBuffer
 import io.kinference.utils.wgpu.jnr.WGPUBufferMapAsyncStatus
 import io.kinference.utils.wgpu.jnr.WGPUDevice
 
-actual class Buffer(val wgpuBuffer: WGPUBuffer, actual val size: Int, val wgpuDevice: WGPUDevice) {
+actual class Buffer(val wgpuBuffer: WGPUBuffer, private val size: Int, val wgpuDevice: WGPUDevice) {
+    actual fun size(): Int = size
+
     actual fun destroy() = WebGPUInstance.wgpuNative.wgpuBufferDestroy(wgpuBuffer)
 
     actual fun getMappedRange(offset: Int, size: Int): BufferData {

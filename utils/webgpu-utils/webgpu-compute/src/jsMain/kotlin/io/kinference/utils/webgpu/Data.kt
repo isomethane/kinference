@@ -4,31 +4,54 @@ import kotlin.js.Json
 import kotlin.js.json
 
 actual class BindGroupEntry actual constructor(
-    val binding: Int,
-    val resource: BufferBinding
-)
+    override var binding: Int,
+    resource: BufferBinding
+): GPUBindGroupEntry {
+    override var resource: GPUBufferBinding = resource
+}
+external interface GPUBindGroupEntry {
+    var binding: Int
+    var resource: GPUBufferBinding
+}
 
 actual class BindGroupLayoutEntry actual constructor(
-    val binding: Int,
-    val buffer: BufferBindingLayout
-) {
-    val visibility = 0x4 // COMPUTE
+    override var binding: Int,
+    buffer: BufferBindingLayout
+): GPUBindGroupLayoutEntry {
+    override var buffer: GPUBufferBindingLayout = buffer
+    override var visibility: Int = 0x4 // COMPUTE
+}
+external interface GPUBindGroupLayoutEntry {
+    var binding: Int
+    var buffer: GPUBufferBindingLayout
+    var visibility: Int
 }
 
 actual class BufferBinding actual constructor(
     buffer: Buffer,
-    val offset: Int,
-    val size: Int
-) {
-    val buffer = buffer.gpuBuffer
+    override var offset: Int,
+    override var size: Int
+): GPUBufferBinding {
+    override var buffer: GPUBuffer = buffer.gpuBuffer
+}
+external interface GPUBufferBinding {
+    var buffer: GPUBuffer
+    var offset: Int
+    var size: Int
 }
 
 actual class BufferBindingLayout actual constructor(
     type: BufferBindingType,
-    val hasDynamicOffset: Boolean,
-    val minBindingSize: Int
-) {
-    val type = type.value
+    hasDynamicOffset: Boolean,
+    override var minBindingSize: Int
+): GPUBufferBindingLayout {
+    override var type: String = type.value
+    override var hasDynamicOffset: Boolean? = hasDynamicOffset
+}
+external interface GPUBufferBindingLayout {
+    var type: String
+    var hasDynamicOffset: Boolean?
+    var minBindingSize: Int
 }
 
 actual class BufferUsageFlags(val value: GPUBufferUsageFlags) {
@@ -105,16 +128,25 @@ typealias GPUMapModeFlags = Long
 
 actual class ProgrammableStage actual constructor(
     module: ShaderModule,
-    val entryPoint: String
-) {
-    val module = module.gpuShaderModule
+    override var entryPoint: String
+): GPUProgrammableStage {
+    override var module = module.gpuShaderModule
+}
+external interface GPUProgrammableStage {
+    var module: GPUShaderModule
+    var entryPoint: String
 }
 
 actual class RequestAdapterOptions actual constructor(
     powerPreference: PowerPreference,
-    val forceFallbackAdapter: Boolean
-) {
-    val powerPreference = powerPreference.value
+    forceFallbackAdapter: Boolean
+): GPURequestAdapterOptions {
+    override var powerPreference: String = powerPreference.value
+    override var forceFallbackAdapter: Boolean? = forceFallbackAdapter
+}
+external interface GPURequestAdapterOptions {
+    var powerPreference: String
+    var forceFallbackAdapter: Boolean?
 }
 
 actual typealias SupportedLimits = GPUSupportedLimits

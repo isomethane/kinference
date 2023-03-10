@@ -71,7 +71,7 @@ class ApiTest {
         computePass.setBindGroup(0, bindGroup, listOf())
         computePass.dispatchWorkgroups(numbers.size)
         computePass.end()
-        commandEncoder.copyBufferToBuffer(storageBuffer, 0, stagingBuffer, 0, storageBuffer.size)
+        commandEncoder.copyBufferToBuffer(storageBuffer, 0, stagingBuffer, 0, storageBuffer.size())
 
         val queue = device.queue
         val cmdBuffer = commandEncoder.finish()

@@ -15,7 +15,7 @@ expect class BindGroupLayoutEntry(
 expect class BufferBinding(
     buffer: Buffer,
     offset: Int = 0,
-    size: Int = max(0, buffer.size - offset),
+    size: Int = max(0, buffer.size() - offset),
 )
 
 expect class BufferBindingLayout(
