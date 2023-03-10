@@ -33,12 +33,20 @@ jobs:
 
   JS-IR:
     runs-on: ubuntu-latest
-    container:
-      image: registry.jetbrains.team/p/ki/containers-ci/ci-corretto-17-firefox:1.0.1
-      options: --user 1001
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'coretto'
+          java-version: 17
+          cache: 'gradle'
+          check-latest: true
+
+      - name: Setup xvfb and firefox
+        run: sudo apt update && sudo apt install firefox xvfb -y -f
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -57,12 +65,20 @@ jobs:
 
   JS-Legacy:
     runs-on: ubuntu-latest
-    container:
-      image: registry.jetbrains.team/p/ki/containers-ci/ci-corretto-17-firefox:1.0.1
-      options: --user 1001
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'coretto'
+          java-version: 17
+          cache: 'gradle'
+          check-latest: true
+
+      - name: Setup xvfb and firefox
+        run: sudo apt update && sudo apt install firefox xvfb -y -f
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
