@@ -46,7 +46,7 @@ jobs:
           check-latest: true
 
       - name: Setup xvfb and firefox
-        run: sudo apt update && sudo apt install firefox xvfb -y -f
+        run: sudo apt-get update && sudo apt-get install firefox xvfb -y -f
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -78,7 +78,7 @@ jobs:
           check-latest: true
 
       - name: Setup xvfb and firefox
-        run: sudo apt update && sudo apt install firefox xvfb -y -f
+        run: sudo apt-get update && sudo apt-get install firefox xvfb -y -f
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
