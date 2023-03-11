@@ -16,6 +16,7 @@ fun KotlinJsPlatformTestRun.configureTests() {
     filter {
         excludeTestsMatching("*.heavy_*")
         excludeTestsMatching("*.benchmark_*")
+        excludeTestsMatching("*.gpu_*")
     }
 
     executionTask.get().enabled = !target.project.hasProperty("disable-tests")
