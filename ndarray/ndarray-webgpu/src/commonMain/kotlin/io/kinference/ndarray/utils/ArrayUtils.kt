@@ -1,4 +1,4 @@
-package io.kinference.ndarray
+package io.kinference.ndarray.utils
 
 import io.kinference.ndarray.arrays.*
 import io.kinference.utils.webgpu.BufferData

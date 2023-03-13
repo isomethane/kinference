@@ -1,4 +1,6 @@
-package io.kinference.webgpu.operators.common
+package io.kinference.ndarray.utils
+
+const val DEFAULT_WORK_GROUP_SIZE_1D = 128
 
 fun shapeToWorkSize(shape: IntArray): IntArray =
     shape.reversedArray().let {

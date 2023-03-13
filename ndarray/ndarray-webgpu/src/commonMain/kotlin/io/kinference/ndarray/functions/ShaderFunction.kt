@@ -1,15 +1,9 @@
-package io.kinference.webgpu.operators.common
+package io.kinference.ndarray.functions
 
-import io.kinference.attribute.Attribute
 import io.kinference.ndarray.environment.WebGPU
-import io.kinference.operator.Operator
-import io.kinference.operator.OperatorInfo
 import io.kinference.utils.webgpu.*
-import io.kinference.webgpu.data.tensor.WebGPUTensor
 
-abstract class ShaderOperator(
-    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
+abstract class ShaderFunction : NDArrayFunction {
     protected abstract val shader: String
     protected open val shaderEntryPoint: String = "main"
     protected abstract val workGroupSize: IntArray

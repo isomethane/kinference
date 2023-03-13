@@ -2,8 +2,8 @@ package io.kinference.webgpu.data.tensor
 
 import io.kinference.data.ONNXData
 import io.kinference.data.ONNXTensor
-import io.kinference.ndarray.*
 import io.kinference.ndarray.arrays.*
+import io.kinference.ndarray.utils.*
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.types.ValueTypeInfo
 import io.kinference.webgpu.WebGPUBackend

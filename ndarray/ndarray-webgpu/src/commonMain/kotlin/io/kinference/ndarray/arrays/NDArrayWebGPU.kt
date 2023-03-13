@@ -1,8 +1,7 @@
 package io.kinference.ndarray.arrays
 
 import io.kinference.ndarray.environment.WebGPU
-import io.kinference.ndarray.environment.WebGPUState
-import io.kinference.ndarray.unpack
+import io.kinference.ndarray.utils.unpack
 import io.kinference.utils.webgpu.*
 
 class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state: NDArrayState) {

@@ -1,18 +1,10 @@
-package io.kinference.webgpu.operators.common
+package io.kinference.ndarray.functions
 
-import io.kinference.attribute.Attribute
-import io.kinference.data.ONNXData
-import io.kinference.graph.Contexts
 import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.environment.WebGPU
-import io.kinference.operator.OperatorInfo
 import io.kinference.utils.webgpu.*
-import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.data.tensor.asTensor
 
-abstract class BinaryOperator(
-    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : ShaderOperator(name, info, attributes, inputs, outputs) {
+abstract class BinaryOperator : ShaderFunction() {
     override val bindGroupLayoutDescriptor: BindGroupLayoutDescriptor = BindGroupLayoutDescriptor(
         listOf(
             BindGroupLayoutEntry(0, BufferBindingLayout(BufferBindingType.ReadOnlyStorage)),
@@ -27,19 +19,19 @@ abstract class BinaryOperator(
     protected val outputInfo: NDArrayInfo
         get() = NDArrayInfo(outputShape, outputType)
 
-    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+    override suspend fun apply(inputs: List<NDArrayWebGPU?>): NDArrayWebGPU {
         val output = NDArrayWebGPU(outputInfo)
         val bindGroup = WebGPU.device.createBindGroup(
             BindGroupDescriptor(
                 layout = WebGPU.device.createBindGroupLayout(bindGroupLayoutDescriptor),
                 entries = listOf(
-                    BindGroupEntry(0, BufferBinding(inputs[0]!!.data.getBuffer())),
-                    BindGroupEntry(1, BufferBinding(inputs[1]!!.data.getBuffer())),
+                    BindGroupEntry(0, BufferBinding(inputs[0]!!.getBuffer())),
+                    BindGroupEntry(1, BufferBinding(inputs[1]!!.getBuffer())),
                     BindGroupEntry(2, BufferBinding(output.getBuffer())),
                 )
             )
         )
         performComputePass(bindGroup)
-        return listOf(output.asTensor("C"))
+        return output
     }
 }

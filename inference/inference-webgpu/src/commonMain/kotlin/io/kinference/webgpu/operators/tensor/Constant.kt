@@ -4,7 +4,7 @@ import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
 import io.kinference.ndarray.arrays.*
-import io.kinference.ndarray.toIntArray
+import io.kinference.ndarray.utils.toIntArray
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor

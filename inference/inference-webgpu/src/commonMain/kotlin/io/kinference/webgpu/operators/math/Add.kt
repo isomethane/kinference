@@ -1,12 +1,16 @@
 package io.kinference.webgpu.operators.math
 
 import io.kinference.attribute.Attribute
+import io.kinference.data.ONNXData
+import io.kinference.graph.Contexts
+import io.kinference.ndarray.functions.math.AddOperator
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
-import io.kinference.webgpu.operators.common.ArithmeticOperator
+import io.kinference.webgpu.data.tensor.WebGPUTensor
+import io.kinference.webgpu.data.tensor.asTensor
 
 sealed class Add(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
-    : ArithmeticOperator(name, info, attributes, inputs, outputs) {
+    : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 7)
 
@@ -41,5 +45,9 @@ class AddVer7(name: String, attributes: Map<String, Attribute<Any>>, inputs: Lis
         private val INFO = OperatorInfo("Add", emptyMap(), INPUTS_INFO, OUTPUTS_INFO, VERSION, domain = OperatorInfo.DEFAULT_DOMAIN)
     }
 
-    override fun operation(input0: String, input1: String, output: String): String = "$output = $input0 + $input1;"
+    private val add = AddOperator()
+
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+        return listOf(add.apply(inputs[0]!!.data, inputs[1]!!.data).asTensor("C"))
+    }
 }

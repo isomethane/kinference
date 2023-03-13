@@ -1,12 +1,16 @@
 package io.kinference.webgpu.operators.logical
 
 import io.kinference.attribute.Attribute
+import io.kinference.data.ONNXData
+import io.kinference.graph.Contexts
+import io.kinference.ndarray.functions.logical.GreaterOperator
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
-import io.kinference.webgpu.operators.common.LogicalOperator
+import io.kinference.webgpu.data.tensor.WebGPUTensor
+import io.kinference.webgpu.data.tensor.asTensor
 
 sealed class Greater(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
-    : LogicalOperator(name, info, attributes, inputs, outputs) {
+    : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
         private val DEFAULT_VERSION = VersionInfo(sinceVersion = 7)
 
@@ -34,5 +38,9 @@ class GreaterVer7(name: String, attributes: Map<String, Attribute<Any>>, inputs:
         private val INFO = OperatorInfo("Greater", emptyMap(), INPUTS_INFO, OUTPUTS_INFO, VERSION, domain = OperatorInfo.DEFAULT_DOMAIN)
     }
 
-    override fun operation(input0: String, input1: String, output: String): String = "$output = i32($input0 > $input1);"
+    private val greater = GreaterOperator()
+
+    override suspend fun <D : ONNXData<*, *>> apply(contexts: Contexts<D>, inputs: List<WebGPUTensor?>): List<WebGPUTensor?> {
+        return listOf(greater.apply(inputs[0]!!.data, inputs[1]!!.data).asTensor("C"))
+    }
 }

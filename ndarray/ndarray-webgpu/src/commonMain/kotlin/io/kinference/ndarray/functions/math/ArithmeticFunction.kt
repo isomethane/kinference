@@ -1,40 +1,25 @@
-package io.kinference.webgpu.operators.common
+package io.kinference.ndarray.functions.math
 
-import io.kinference.attribute.Attribute
-import io.kinference.data.ONNXData
-import io.kinference.graph.Contexts
 import io.kinference.ndarray.arrays.*
 import io.kinference.ndarray.broadcasting.unsqueezeFirst
-import io.kinference.operator.Operator
-import io.kinference.operator.OperatorInfo
-import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.utils.DEFAULT_WORK_GROUP_SIZE_1D
-import io.kinference.webgpu.utils.divUp
+import io.kinference.ndarray.functions.*
+import io.kinference.ndarray.utils.*
 
-abstract class ArithmeticOperator(
-    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : CachingShaderOperator(name, info, attributes, inputs, outputs) {
+abstract class ArithmeticFunction : CachingShaderFunction() {
     abstract fun operation(input0: String, input1: String, output: String): String
 
-    override fun <D : ONNXData<*, *>> operatorImplementation(inputInfo: List<NDArrayInfo?>, contexts: Contexts<D>): Operator<WebGPUTensor, WebGPUTensor> =
+    override fun implementation(inputInfo: List<NDArrayInfo?>): NDArrayFunction =
         when {
-            inputInfo[0]!!.shape.contentEquals(inputInfo[1]!!.shape) -> ArithmeticOperatorWithoutBroadcast(
-                this::operation, inputInfo[0]!!,
-                name = name, info = info, attributes = attributes, inputs = inputs, outputs = outputs
-            )
-            else -> ArithmeticOperatorWithBroadcast(
-                this::operation, inputInfo[0]!!, inputInfo[1]!!,
-                name = name, info = info, attributes = attributes, inputs = inputs, outputs = outputs
-            )
+            inputInfo[0]!!.shape.contentEquals(inputInfo[1]!!.shape) -> ArithmeticFunctionWithoutBroadcast(this::operation, inputInfo[0]!!)
+            else -> ArithmeticFunctionWithBroadcast(this::operation, inputInfo[0]!!, inputInfo[1]!!)
         }
 }
 
-class ArithmeticOperatorWithoutBroadcast(
+class ArithmeticFunctionWithoutBroadcast(
     private val operation: (String, String, String) -> String,
     private val inputInfo: NDArrayInfo,
-    override val outputType: WebGPUDataType = inputInfo.type,
-    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : BinaryOperator(name, info, attributes, inputs, outputs) {
+    override val outputType: WebGPUDataType = inputInfo.type
+) : BinaryOperator() {
     override val outputShape: IntArray = inputInfo.shape
 
     override val shader: String
@@ -66,13 +51,12 @@ fn main(@builtin(global_invocation_id) global_id : vec3<u32>) {
         get() = intArrayOf(inputInfo.size divUp workGroupSize[0])
 }
 
-class ArithmeticOperatorWithBroadcast(
+class ArithmeticFunctionWithBroadcast(
     private val operation: (String, String, String) -> String,
     private val inputInfo0: NDArrayInfo,
     private val inputInfo1: NDArrayInfo,
-    override val outputType: WebGPUDataType = inputInfo0.type,
-    name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>
-) : BinaryOperator(name, info, attributes, inputs, outputs) {
+    override val outputType: WebGPUDataType = inputInfo0.type
+) : BinaryOperator() {
     override val outputShape: IntArray = broadcastShape(listOf(inputInfo0.shape, inputInfo1.shape))
 
     override val shader: String
