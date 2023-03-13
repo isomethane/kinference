@@ -44,6 +44,13 @@ jobs:
       - name: Setup xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y -f
 
+      - name: Setup firefox
+        run: | 
+          wget -O ~/Firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64"
+          sudo tar xjf ~/Firefox.tar.bz2 -C /opt/ && \
+          sudo ln -s /opt/firefox/firefox /usr/bin/ && \
+          rm ~/Firefox.tar.bz2
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
@@ -73,6 +80,13 @@ jobs:
 
       - name: Setup xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y -f
+
+      - name: Setup firefox
+        run: |
+          wget -O ~/Firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64"
+          sudo tar xjf ~/Firefox.tar.bz2 -C /opt/ && \
+          sudo ln -s /opt/firefox/firefox /usr/bin/ && \
+          rm ~/Firefox.tar.bz2
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2

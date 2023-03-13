@@ -8,7 +8,11 @@ import org.jetbrains.kotlin.gradle.targets.js.KotlinJsPlatformTestRun
 
 fun KotlinJsPlatformTestRun.configureBrowsers() {
     executionTask.get().useKarma {
-        useChrome()
+        if (this@configureBrowsers.target.project.hasProperty("ci")) {
+            useFirefox()
+        } else {
+            useChrome()
+        }
     }
 }
 
@@ -92,7 +96,9 @@ fun KotlinJsPlatformTestRun.configureGpuLightTests() {
 fun KotlinJsTargetDsl.configureGpuLightTests() {
     testRuns.create("gpu").configureAllExecutions{
         configureGpuLightTests()
-        configureBrowsers()
+        executionTask.get().useKarma {
+            useChrome()
+        }
     }
 
     (this as? KotlinJsTarget)?.irTarget?.testRuns?.create("gpu")?.configureAllExecutions {
