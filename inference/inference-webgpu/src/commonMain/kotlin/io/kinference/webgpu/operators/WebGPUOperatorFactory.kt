@@ -42,6 +42,7 @@ object WebGPUOperatorFactory : OperatorFactory<WebGPUData<*>> {
         "Mul" -> Mul(name, version, attributes, inputs, outputs)
         "Or" -> Or(name, version, attributes, inputs, outputs)
         "Reshape" -> Reshape(name, version, attributes, inputs, outputs)
+        "Shape" -> Shape(name, version, attributes, inputs, outputs)
         "Squeeze" -> Squeeze(name, version, attributes, inputs, outputs)
         "Sub" -> Sub(name, version, attributes, inputs, outputs)
         "Unsqueeze" -> Unsqueeze(name, version, attributes, inputs, outputs)
