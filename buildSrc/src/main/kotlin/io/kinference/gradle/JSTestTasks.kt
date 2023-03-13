@@ -20,6 +20,7 @@ fun KotlinJsPlatformTestRun.configureTests() {
     filter {
         excludeTestsMatching("*.heavy_*")
         excludeTestsMatching("*.benchmark_*")
+        excludeTestsMatching("*.gpu_*")
     }
 
     executionTask.get().enabled = !target.project.hasProperty("disable-tests")
@@ -95,7 +96,9 @@ fun KotlinJsPlatformTestRun.configureGpuLightTests() {
 fun KotlinJsTargetDsl.configureGpuLightTests() {
     testRuns.create("gpu").configureAllExecutions{
         configureGpuLightTests()
-        configureBrowsers()
+        executionTask.get().useKarma {
+            useChrome()
+        }
     }
 
     (this as? KotlinJsTarget)?.irTarget?.testRuns?.create("gpu")?.configureAllExecutions {

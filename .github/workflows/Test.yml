@@ -14,8 +14,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
-      #          cache: 'gradle'
-      #          check-latest: true
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
 
@@ -33,12 +31,25 @@ jobs:
 
   JS-IR:
     runs-on: ubuntu-latest
-    container:
-      image: registry.jetbrains.team/p/ki/containers-ci/ci-corretto-17-firefox:1.0.1
-      options: --user 1001
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y -f
+
+      - name: Setup firefox
+        run: | 
+          wget -O ~/Firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64"
+          sudo tar xjf ~/Firefox.tar.bz2 -C /opt/ && \
+          sudo ln -sf /opt/firefox/firefox /usr/bin/ && \
+          rm ~/Firefox.tar.bz2
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -57,12 +68,25 @@ jobs:
 
   JS-Legacy:
     runs-on: ubuntu-latest
-    container:
-      image: registry.jetbrains.team/p/ki/containers-ci/ci-corretto-17-firefox:1.0.1
-      options: --user 1001
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y -f
+
+      - name: Setup firefox
+        run: |
+          wget -O ~/Firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64"
+          sudo tar xjf ~/Firefox.tar.bz2 -C /opt/ && \
+          sudo ln -sf /opt/firefox/firefox /usr/bin/ && \
+          rm ~/Firefox.tar.bz2
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2

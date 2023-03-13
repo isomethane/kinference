@@ -1,4 +1,5 @@
 import io.kinference.gradle.configureGpuLightTests
+import io.kinference.gradle.configureTests
 
 plugins {
     kotlin("kapt") apply true
@@ -11,6 +12,7 @@ kotlin {
     js(BOTH) {
         browser()
 
+        configureTests()
         configureGpuLightTests()
     }
 
