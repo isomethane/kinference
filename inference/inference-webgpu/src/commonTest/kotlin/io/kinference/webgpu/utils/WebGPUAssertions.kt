@@ -4,7 +4,7 @@ import io.kinference.data.ONNXDataType
 import io.kinference.ndarray.arrays.*
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.utils.ArrayAssertions.assertArrayEquals
-import io.kinference.webgpu.engine.WebGPUData
+import io.kinference.webgpu.WebGPUData
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import kotlin.math.abs
 import kotlin.test.assertContentEquals

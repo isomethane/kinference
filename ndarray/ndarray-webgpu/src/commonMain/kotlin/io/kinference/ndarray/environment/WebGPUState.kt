@@ -1,9 +1,9 @@
-package io.kinference.ndarray
+package io.kinference.ndarray.environment
 
 import io.kinference.ndarray.arrays.*
 import io.kinference.utils.webgpu.*
 
-class WebGPUState(val device: Device) {
+internal class WebGPUState(private val device: Device) {
     private var numOfPendingCommands: Int = 0
     private var commandEncoder: CommandEncoder = device.createCommandEncoder()
 

@@ -6,7 +6,7 @@ import io.kinference.ndarray.*
 import io.kinference.ndarray.arrays.*
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.types.ValueTypeInfo
-import io.kinference.webgpu.engine.WebGPUBackend
+import io.kinference.webgpu.WebGPUBackend
 
 class WebGPUTensor(name: String?, data: NDArrayWebGPU, val info: ValueTypeInfo.TensorTypeInfo) : ONNXTensor<NDArrayWebGPU, WebGPUBackend>(name, data) {
     override val backend = WebGPUBackend

@@ -4,13 +4,11 @@ import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
 import io.kinference.ndarray.arrays.*
+import io.kinference.ndarray.environment.WebGPU
 import io.kinference.operator.OperatorInfo
 import io.kinference.utils.webgpu.*
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.engine.WebGPU
-import io.kinference.webgpu.utils.getBuffer
-import io.kinference.webgpu.utils.invoke
 
 abstract class UnaryOperator(
     name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>

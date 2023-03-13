@@ -8,7 +8,6 @@ import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.utils.reshape
 
 sealed class Flatten(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {

@@ -3,7 +3,7 @@ package io.kinference.webgpu.operators.math
 import io.kinference.attribute.Attribute
 import io.kinference.operator.*
 import io.kinference.protobuf.message.TensorProto
-import io.kinference.webgpu.operators.common.*
+import io.kinference.webgpu.operators.common.ArithmeticOperator
 
 sealed class Sub(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>)
     : ArithmeticOperator(name, info, attributes, inputs, outputs) {

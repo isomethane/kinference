@@ -5,8 +5,8 @@ import io.kinference.operator.Operator
 import io.kinference.operator.OperatorSetRegistry
 import io.kinference.protobuf.message.GraphProto
 import io.kinference.protobuf.message.TensorProto
+import io.kinference.webgpu.WebGPUData
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.engine.WebGPUData
 import io.kinference.webgpu.operators.WebGPUOperatorFactory
 
 class WebGPUGraph(

@@ -1,16 +1,15 @@
 package io.kinference.ndarray.extensions
 
-import io.kinference.ndarray.WebGPUState
 import io.kinference.ndarray.arrays.*
 
 fun NDArrayWebGPU.indexAxis(axis: Int): Int {
     return if (axis < 0) info.rank + axis else axis
 }
 
-suspend fun NDArrayWebGPU.reshape(tensorShape: NDArrayWebGPU, gpuState: WebGPUState): NDArrayWebGPU {
+suspend fun NDArrayWebGPU.reshape(tensorShape: NDArrayWebGPU): NDArrayWebGPU {
     require(tensorShape.info.type == WebGPUDataType.INT32) { "Tensor shape must have INT32 type" }
 
-    val newShape = (tensorShape.getData(gpuState) as IntNDArrayData).data
+    val newShape = (tensorShape.getData() as IntNDArrayData).data
     require(newShape.count { it == -1 } <= 1) { "At most one dimension of the new shape can be -1" }
 
     for ((i, axisShape) in newShape.withIndex()) {
@@ -23,10 +22,10 @@ suspend fun NDArrayWebGPU.reshape(tensorShape: NDArrayWebGPU, gpuState: WebGPUSt
         newShape[negativeIdx] = info.strides.linearSize / elementsCount
     }
 
-    return reshape(newShape, gpuState)
+    return reshape(newShape)
 }
 
-fun NDArrayWebGPU.squeeze(axes: IntArray, gpuState: WebGPUState): NDArrayWebGPU {
+fun NDArrayWebGPU.squeeze(axes: IntArray): NDArrayWebGPU {
     val actualAxes = if (axes.isNotEmpty()) {
         axes.map { indexAxis(it) }
     } else {
@@ -37,19 +36,19 @@ fun NDArrayWebGPU.squeeze(axes: IntArray, gpuState: WebGPUState): NDArrayWebGPU 
     val shapeIndices = info.shape.indices - actualAxes
     val newShape = info.shape.sliceArray(shapeIndices)
 
-    return reshape(newShape, gpuState)
+    return reshape(newShape)
 }
 
 private fun indexAxisForUnsqueeze(axis: Int, shapeSize: Int): Int {
     return if (axis < 0) shapeSize + axis else axis
 }
 
-fun NDArrayWebGPU.unsqueeze(axes: IntArray, gpuState: WebGPUState): NDArrayWebGPU {
+fun NDArrayWebGPU.unsqueeze(axes: IntArray): NDArrayWebGPU {
     val actualAxes = axes.map { indexAxisForUnsqueeze(it, info.rank + axes.size) }.sorted()
     val newShape = info.shape.toMutableList()
     for (axis in actualAxes) {
         newShape.add(axis, 1)
     }
 
-    return reshape(newShape.toIntArray(), gpuState)
+    return reshape(newShape.toIntArray())
 }

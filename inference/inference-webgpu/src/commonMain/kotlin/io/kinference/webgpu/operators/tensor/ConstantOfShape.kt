@@ -9,7 +9,6 @@ import io.kinference.protobuf.message.AttributeProto
 import io.kinference.protobuf.message.TensorProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.utils.getData
 
 sealed class ConstantOfShape(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {

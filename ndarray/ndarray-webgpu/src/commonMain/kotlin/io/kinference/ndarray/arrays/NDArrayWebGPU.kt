@@ -1,17 +1,18 @@
 package io.kinference.ndarray.arrays
 
-import io.kinference.ndarray.WebGPUState
+import io.kinference.ndarray.environment.WebGPU
+import io.kinference.ndarray.environment.WebGPUState
 import io.kinference.ndarray.unpack
 import io.kinference.utils.webgpu.*
 
 class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state: NDArrayState) {
-    fun getBuffer(gpuState: WebGPUState): Buffer {
-        prepareBuffer(gpuState)
+    fun getBuffer(): Buffer {
+        prepareBuffer()
         return (state as NDArrayBuffer).buffer
     }
 
-    suspend fun finalizeOutputNDArray(gpuState: WebGPUState) {
-        getData(gpuState)
+    suspend fun finalizeOutputNDArray() {
+        getData()
         when (val currentState = state) {
             is NDArrayDestroyed -> error("Use of destroyed buffer")
             is NDArrayData -> currentState.data
@@ -22,31 +23,31 @@ class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state
         }
     }
 
-    fun requestData(gpuState: WebGPUState): Unit =
+    fun requestData(): Unit =
         when (val currentState = state) {
             is NDArrayDestroyed -> error("Use of destroyed buffer")
             is NDArrayData, is NDArrayInitializedBuffer, is NDArrayCopyingBuffer -> {}
             is NDArrayUninitializedBuffer -> {
                 state = NDArrayCopyingBuffer(
                     sourceBuffer = currentState.buffer,
-                    destinationBuffer = gpuState.createReadableBuffer(info, currentState.buffer)
+                    destinationBuffer = WebGPU.createReadableBuffer(info, currentState.buffer)
                 )
             }
         }
 
     fun getReadyData(): TypedNDArrayData = (state as NDArrayData).data
 
-    suspend fun getData(gpuState: WebGPUState): TypedNDArrayData =
+    suspend fun getData(): TypedNDArrayData =
         when (val currentState = state) {
             is NDArrayDestroyed -> error("Use of destroyed buffer")
             is NDArrayData -> currentState.data
             is NDArrayInitializedBuffer -> currentState.data
             is NDArrayUninitializedBuffer -> {
-                requestData(gpuState)
-                getData(gpuState)
+                requestData()
+                getData()
             }
             is NDArrayCopyingBuffer -> {
-                gpuState.enqueueCommands()
+                WebGPU.enqueueCommands()
                 currentState.destinationBuffer.mapAsync(MapModeFlags(MapMode.Read))
                 val data = currentState.destinationBuffer.getMappedRange().unpack(info)
                 state = NDArrayInitializedBuffer(data, currentState.sourceBuffer)
@@ -54,11 +55,11 @@ class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state
             }
         }
 
-    private fun prepareBuffer(gpuState: WebGPUState): Unit =
+    private fun prepareBuffer(): Unit =
         when (val currentState = state) {
             is NDArrayDestroyed -> error("Use of destroyed buffer")
             is NDArrayData -> {
-                state = NDArrayInitializedBuffer(currentState.data, gpuState.createInitializedBuffer(info, currentState.data))
+                state = NDArrayInitializedBuffer(currentState.data, WebGPU.createInitializedBuffer(info, currentState.data))
             }
             is NDArrayBuffer -> {}
         }
@@ -71,15 +72,15 @@ class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state
         state = NDArrayDestroyed
     }
 
-    fun reshape(newShape: IntArray, gpuState: WebGPUState): NDArrayWebGPU {
+    fun reshape(newShape: IntArray): NDArrayWebGPU {
         val newInfo = NDArrayInfo(newShape, info.type)
         return when (val currentState = state) {
             is NDArrayDestroyed -> error("Use of destroyed buffer")
             is NDArrayData -> NDArrayWebGPU(newInfo, NDArrayData(currentState.data))
             is NDArrayInitializedBuffer -> NDArrayWebGPU(newInfo, NDArrayData(currentState.data))
             is NDArrayBuffer -> {
-                val newBuffer = gpuState.createUninitializedBuffer(newInfo)
-                gpuState.copyBufferToBuffer(currentState.buffer, 0, newBuffer, 0, newInfo.size)
+                val newBuffer = WebGPU.createUninitializedBuffer(newInfo)
+                WebGPU.copyBufferToBuffer(currentState.buffer, 0, newBuffer, 0, newInfo.size)
                 NDArrayWebGPU(newInfo, NDArrayUninitializedBuffer(newBuffer))
             }
         }
@@ -96,7 +97,6 @@ class NDArrayWebGPU private constructor(val info: NDArrayInfo, private var state
 
         operator fun invoke(info: NDArrayInfo, data: TypedNDArrayData): NDArrayWebGPU = NDArrayWebGPU(info, NDArrayData(data))
 
-        operator fun invoke(info: NDArrayInfo, gpuState: WebGPUState): NDArrayWebGPU =
-            NDArrayWebGPU(info, NDArrayUninitializedBuffer(gpuState.createUninitializedBuffer(info)))
+        operator fun invoke(info: NDArrayInfo): NDArrayWebGPU = NDArrayWebGPU(info, NDArrayUninitializedBuffer(WebGPU.createUninitializedBuffer(info)))
     }
 }

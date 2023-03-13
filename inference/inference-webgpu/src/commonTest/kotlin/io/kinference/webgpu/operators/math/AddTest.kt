@@ -1,7 +1,7 @@
 package io.kinference.webgpu.operators.math
 
-import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import io.kinference.utils.TestRunner
+import io.kinference.webgpu.WebGPUTestEngine.WebGPUAccuracyRunner
 import kotlin.test.Test
 
 class AddTest {

@@ -1,4 +1,4 @@
-package io.kinference.webgpu.engine
+package io.kinference.webgpu
 
 import io.kinference.BackendInfo
 import io.kinference.InferenceEngine

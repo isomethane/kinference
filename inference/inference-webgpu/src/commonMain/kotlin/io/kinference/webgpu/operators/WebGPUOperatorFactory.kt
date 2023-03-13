@@ -6,8 +6,8 @@ import io.kinference.graph.Graph
 import io.kinference.operator.*
 import io.kinference.protobuf.message.GraphProto
 import io.kinference.protobuf.message.TensorProto
+import io.kinference.webgpu.WebGPUData
 import io.kinference.webgpu.data.tensor.WebGPUTensor
-import io.kinference.webgpu.engine.WebGPUData
 import io.kinference.webgpu.graph.WebGPUGraph
 import io.kinference.webgpu.operators.logical.*
 import io.kinference.webgpu.operators.math.*

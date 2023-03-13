@@ -3,8 +3,6 @@ package io.kinference.webgpu
 import io.kinference.TestEngine
 import io.kinference.runners.AccuracyRunner
 import io.kinference.runners.PerformanceRunner
-import io.kinference.webgpu.engine.WebGPUData
-import io.kinference.webgpu.engine.WebGPUEngine
 import io.kinference.webgpu.utils.WebGPUAssertions
 
 object WebGPUTestEngine : TestEngine<WebGPUData<*>>(WebGPUEngine) {

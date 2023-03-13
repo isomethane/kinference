@@ -3,13 +3,12 @@ package io.kinference.webgpu.operators.tensor
 import io.kinference.attribute.Attribute
 import io.kinference.data.ONNXData
 import io.kinference.graph.Contexts
+import io.kinference.ndarray.extensions.unsqueeze
 import io.kinference.ndarray.toIntArray
 import io.kinference.operator.*
 import io.kinference.protobuf.message.AttributeProto
 import io.kinference.webgpu.data.tensor.WebGPUTensor
 import io.kinference.webgpu.data.tensor.asTensor
-import io.kinference.webgpu.utils.unsqueeze
-import kotlin.time.ExperimentalTime
 
 sealed class Unsqueeze(name: String, info: OperatorInfo, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Operator<WebGPUTensor, WebGPUTensor>(name, info, attributes, inputs, outputs) {
     companion object {
@@ -22,7 +21,6 @@ sealed class Unsqueeze(name: String, info: OperatorInfo, attributes: Map<String,
     }
 }
 
-@ExperimentalTime
 class UnsqueezeVer1(name: String, attributes: Map<String, Attribute<Any>>, inputs: List<String>, outputs: List<String>) : Unsqueeze(name, INFO, attributes, inputs, outputs) {
     companion object {
         private val TYPE_CONSTRAINTS = ALL_DATA_TYPES
